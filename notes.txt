@@ -1,0 +1,3 @@
+- using d1 mini esp32. might need to change gpio on different platforms.
+- many esp32 boards are not 5V tolerant
+- bt overrules webserver?
