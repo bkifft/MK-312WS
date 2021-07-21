@@ -204,6 +204,10 @@ void mk312_set_ma(int percent)
 {
 
 }
+void mk312_set_mode(byte newmode){
+  
+}
+
 
 void init_mk312() {
   Serial2.begin(19200);

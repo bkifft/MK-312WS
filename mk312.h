@@ -85,5 +85,6 @@ void mk312_sync();
 void mk312_set_a(int percent);
 void mk312_set_b(int percent);
 void mk312_set_ma(int percent);
+void mk312_set_mode(byte newmode);
 
 #endif //MK312_H
