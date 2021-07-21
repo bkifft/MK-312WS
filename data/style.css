@@ -23,7 +23,7 @@ html {
     padding: 30px;
   }
   .card-grid {
-    max-width: 700px;
+    max-width: 75%;
     margin: 0 auto;
     display: grid;
     grid-gap: 2rem;

@@ -23,9 +23,14 @@ function onClose(event) {
 }
 
 function update_slider(element) {
-    var  value = document.getElementById(element.id).value;
+    var value = document.getElementById(element.id).value;
     document.getElementById(element.id + "_value").innerHTML = value;
     websocket.send(element.id + "?" + value.toString());
+}
+
+function update_radio(element) {
+    var value = document.getElementById(element.id).value;
+    websocket.send(element.name + "?" + value.toString());
 }
 
 function onMessage(event) 

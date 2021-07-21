@@ -27,11 +27,64 @@
                 <p class="state"><span id="slider_b_value"></span> &percnt;</p>
             </div>
             <div class="card">
-                <p class="card-title">MA</p>
+                <p class="card-title">Multi Adjust</p>
                 <p class="switch">
                     <input type="range" onchange="update_slider(this)" id="slider_m" min="0" max="100" step="1" value ="0" class="slider">
                 </p>
                 <p class="state"><span id="slider_m_value"></span> &percnt;</p>
+            </div>
+			<div class="card">
+                <p class="card-title">Mode</p>
+                <p class="switch">
+				<div style="display: inline-block; text-align: left;">
+				
+					<input type="radio" onclick="update_radio(this)" name="mode" id="waves" value="waves" checked><label for="waves">Waves</label><br>
+					<input type="radio" onclick="update_radio(this)" name="mode" id="stroke" value="stroke"><label for="stroke">Stroke</label><br>
+					<input type="radio" onclick="update_radio(this)" name="mode" id="climb" value="climb"><label for="climb">Climb</label><br>
+					<input type="radio" onclick="update_radio(this)" name="mode" id="combo" value="combo"><label for="combo">Combo</label><br>
+					<input type="radio" onclick="update_radio(this)" name="mode" id="intense" value="intense"><label for="intense">Intense</label><br>
+					<input type="radio" onclick="update_radio(this)" name="mode" id="rythm" value="rythm"><label for="rythm">Rythm</label><br>
+					<input type="radio" onclick="update_radio(this)" name="mode" id="audio1" value="audio1"><label for="audio1">Audio 1</label><br>
+					<input type="radio" onclick="update_radio(this)" name="mode" id="audio2" value="audio2"><label for="audio2">Audio 2</label><br>
+					<input type="radio" onclick="update_radio(this)" name="mode" id="audio3" value="audio3"><label for="audio3">Audio 3</label><br>
+					<input type="radio" onclick="update_radio(this)" name="mode" id="split" value="split"><label for="split">Split</label><br>
+					<input type="radio" onclick="update_radio(this)" name="mode" id="random1" value="random1"><label for="random1">Random 1</label><br>	
+					<input type="radio" onclick="update_radio(this)" name="mode" id="random2" value="random2"><label for="random2">Random 2</label><br>
+
+              
+				</div>
+				  </p>
+            </div>
+			<div class="card">
+                <p class="card-title">Mode</p>
+                <p class="switch">
+				<div style="display: inline-block; text-align: left;">
+			
+					<input type="radio" onclick="update_radio(this)" name="mode" id="toggle" value="toggle"><label for="toggle">Toggle</label><br>
+					<input type="radio" onclick="update_radio(this)" name="mode" id="orgasm" value="orgasm"><label for="orgasm">Orgasm</label><br>
+					<input type="radio" onclick="update_radio(this)" name="mode" id="torment" value="torment"><label for="torment">Torment</label><br>
+					<input type="radio" onclick="update_radio(this)" name="mode" id="phase1" value="phase1"><label for="phase1">Phase 1</label><br>
+					<input type="radio" onclick="update_radio(this)" name="mode" id="phase2" value="phase2"><label for="phase2">Phase 2</label><br>
+					<input type="radio" onclick="update_radio(this)" name="mode" id="phase3" value="phase3"><label for="phase3">Phase 3</label><br>
+					<input type="radio" onclick="update_radio(this)" name="mode" id="user1" value="user1"><label for="user1">User 1</label><br>
+					<input type="radio" onclick="update_radio(this)" name="mode" id="user2" value="user2"><label for="user2">User 2</label><br>
+					<input type="radio" onclick="update_radio(this)" name="mode" id="user3" value="user3"><label for="user3">User 3</label><br>
+					<input type="radio" onclick="update_radio(this)" name="mode" id="user4" value="user4"><label for="user4">User 4</label><br>
+					<input type="radio" onclick="update_radio(this)" name="mode" id="user5" value="user5"><label for="user5">User 5</label><br>
+					<input type="radio" onclick="update_radio(this)" name="mode" id="user6" value="user6"><label for="user6">User 6</label><br>
+					<input type="radio" onclick="update_radio(this)" name="mode" id="user7" value="user7"><label for="user7">User 7</label><br>
+			
+			
+			</div>
+				  </p>
+            </div>
+			
+			<div class="card">
+                <p class="card-title">Disable Input</p>
+                <p class="switch">
+                    <input type="radio" onclick="update_radio(this)" name="adc" id="adc_on" value="adc_on" checked><label for="adc_on">Input enabled</label><br>
+					<input type="radio" onclick="update_radio(this)" name="adc" id="adc_off" value="adc_off"><label for="adc_off">Input disabled</label><br>
+                </p>
             </div>
         </div>
     </div>
