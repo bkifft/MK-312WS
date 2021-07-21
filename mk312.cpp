@@ -2,7 +2,7 @@
 #include <HardwareSerial.h>
 #include "mk312.h"
 
-char key = 0x00;
+byte key = 0x00;
 const int retry_limit = 11;
 
 
@@ -17,30 +17,38 @@ const int retry_limit = 11;
 */
 void mk312_write (uint16_t address, char* payload, size_t length)
 {
-  char c[16];
-  char sum;
+  if (length > 8)
+  {
+    Serial.println("error: mk312_write longer than eight bytes");
+    return;
+  }
+  byte c[16];
+  byte sum;
   size_t count;
   int i;
-  while (Serial2.available())
-  {
-    Serial2.read();
-  }
 
   c[0] = 0x3d + (length << 4);
-  c[1] = address & 0xff;
-  c[2] = (address >> 8) & 0xff;
-  sum = c[0] + c[1] + c[2];
+  c[1] = (address >> 8) & 0xff;
+  c[2] = address & 0xff;
+  sum = (c[0] + c[1] + c[2]) & 0xff;
   for (i = 0; i < length; i++)
   {
     c[i + 3] = payload[i];
-    sum = sum + payload[i];
+    sum = (sum + payload[i]) & 0xff;
+    Serial.printf("i: %d sum %02x\n",i ,sum);
   }
-  c[length + 4] = sum;
+  c[length + 3] = sum;
   for (i = 0; i < length + 4; i++)
   {
     c[i] = c[i] ^ key;
   }
+  while (Serial2.available())
+  {
+    Serial2.read();
+  }
   Serial2.write(c, length + 4);
+  Serial.printf("sent %02x%02x%02x%02x%02x%02x\n", c[0], c[1], c[2], c[3], c[4], c[5]);
+  delay(20);
   count = Serial2.readBytes(c, 16); //FIXME
   if (count > 0)
   {
@@ -62,8 +70,8 @@ void mk312_write (uint16_t address, char* payload, size_t length)
 */
 char mk312_read (uint16_t address)
 {
-  char c[4];
-  char sum;
+  byte c[4];
+  byte sum;
   size_t count;
   int i;
   while (Serial2.available())
@@ -72,8 +80,8 @@ char mk312_read (uint16_t address)
   }
 
   c[0] = 0x3c;
-  c[1] = address & 0xff;
-  c[2] = (address >> 8) & 0xff;
+  c[1] = (address >> 8) & 0xff;
+  c[2] = address & 0xff;
   c[3] = c[0] + c[1] + c[2];
 
   for (i = 0; i < 4; i++)
@@ -107,20 +115,27 @@ char mk312_read (uint16_t address)
 //[0x21, 0xXX, 0xYY] is read from ET312
 void mk312_key_exchange()
 {
-  char c[3] = {0x2f, 0x00, 0x2f};
-  char sum;
+  byte c[3] = {0x00};
+  byte sum;
   size_t count;
-  while (Serial2.available())
+
+  c[0] = 0x2f; //setkey command
+  c[1] = 0x00; //hostkey
+  c[2] = 0x2f; //checksum
+
+  while (Serial2.available()) //flush
   {
     Serial2.read();
   }
+
   Serial2.write(c, 3);
+
   count = Serial2.readBytes(c, 3);
   if (count > 0)
   {
     Serial.printf("got %d %02x%02x%02x\n", count, c[0], c[1], c[2]);
   }
-  sum = c[0] + c[1];
+  sum = (c[0] + c[1]) & 0xff;;
   if (sum != c[2])
   {
     Serial.printf("error: wrong key exchange checksum got %02x calc %02x\n", c[2], sum);
@@ -139,12 +154,9 @@ void mk312_key_exchange()
 //write 0x00 untill reading 0x07. must happen no later than 11 bytes
 void mk312_sync() {
   int i;
-  char c;
+  byte c;
   size_t count;
-  while (Serial2.available())
-  {
-    Serial2.read();
-  }
+
   Serial.printf("mk312 sync. key %02x\n", key);
   for (i = 0; i < retry_limit; i++)
   {
@@ -152,6 +164,10 @@ void mk312_sync() {
 
     c = 0x00 ^ key;
 
+    while (Serial2.available())
+    {
+      Serial2.read();
+    }
     Serial2.write(&c, 1);
     Serial.printf("sent %02x\n", c);
 
@@ -191,7 +207,8 @@ void mk312_set_ma(int percent)
 
 void init_mk312() {
   Serial2.begin(19200);
-  Serial2.setTimeout(300);
+  Serial2.setTimeout(500);
   mk312_sync();
-  mk312_key_exchange();
+ // mk312_key_exchange();
+ mk312_write (0x4010, "\xFE\xFF", 2);
 }
