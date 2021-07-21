@@ -102,8 +102,7 @@ void init_wifi()
   Serial.println("");
   if (WiFi.status() == WL_CONNECTED)
   {
-    Serial.print("Connected to ");
-    Serial.println(ssid);
+    Serial.println("Connected to " + ssid);
     Serial.print("IP address: ");
     Serial.println(WiFi.localIP());
   }
@@ -136,21 +135,25 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
     if (message.indexOf("_a?") >= 0)
     {
       slider_a = atoi(message.c_str() + message.indexOf("_a?") + 3); //yep, i'm lazy....
+      slider_values["slider_a"] = slider_a;
+      mk312_set_a(slider_a);
+
     }
     if (message.indexOf("_b?") >= 0)
     {
       slider_b = atoi(message.c_str() + message.indexOf("_b?") + 3);
+      slider_values["slider_b"] = slider_b;
+      mk312_set_b(slider_b);
     }
 
     if (message.indexOf("_m?") >= 0)
     {
       slider_m = atoi(message.c_str() + message.indexOf("_m?") + 3);
+      slider_values["slider_m"] = slider_m;
+      mk312_set_ma(slider_m);
     }
     // dutyCycle1 = map(sliderValue1.toInt(), 0, 100, 0, 255);
 
-    slider_values["slider_a"] = slider_a;
-    slider_values["slider_b"] = slider_b;
-    slider_values["slider_m"] = slider_m;
     json_string = JSON.stringify(slider_values);
     ws.textAll(json_string);
   }
@@ -183,6 +186,11 @@ void init_ws()
 void update_mk312()
 {
   //  Serial.println("mk312 stuff):
+  /*  mk312_sync();
+    mk312_set_a(percent);
+    mk312_set_b(percent);
+    mk312_set_ma(percent);
+  */
 }
 
 void setup() {
@@ -191,6 +199,12 @@ void setup() {
   init_preferences();
   init_wifi();
   init_ws();
+  init_mk312();
+
+  slider_values["slider_a"] = slider_a;
+  slider_values["slider_b"] = slider_b;
+  slider_values["slider_m"] = slider_m;
+  json_string = JSON.stringify(slider_values);
 
   server.on("/", HTTP_GET, [](AsyncWebServerRequest * request)
   {
@@ -236,5 +250,5 @@ void setup() {
 
 void loop() {
   ws.cleanupClients();
-  update_mk312();
+ // update_mk312();
 }

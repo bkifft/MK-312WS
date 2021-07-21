@@ -3,8 +3,7 @@
 #define MK312_H
 #pragma once
 
-#include <Arduino.h>
-#include <HardwareSerial.h>
+
 
 //Memory addresses
 #define ADDRESS_R15 0x400f
@@ -81,6 +80,10 @@
 #define BUTTON_LEFT 0x10
 
 
-void handshake();
+void init_mk312();
+void mk312_sync();
+void mk312_set_a(int percent);
+void mk312_set_b(int percent);
+void mk312_set_ma(int percent);
 
 #endif //MK312_H
