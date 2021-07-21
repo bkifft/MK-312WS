@@ -81,6 +81,13 @@ void init_preferences()
   Serial.println("hostname: " + hostname);
 }
 
+String template_processor(const String& var)
+{
+  if (var == "HOSTNAME")
+    return hostname;
+  return String();
+}
+
 void init_wifi()
 {
   int count = 0;
@@ -103,7 +110,7 @@ void init_wifi()
   else
   {
     WiFi.disconnect();
-    WiFi.softAP(ssid.c_str(), password.c_str());
+    WiFi.softAP(default_ssid.c_str(), default_password.c_str());
     Serial.println("AP-Mode");
     Serial.print("IP address: ");
     Serial.println(WiFi.softAPIP());
@@ -128,27 +135,24 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
     message = (char*)data;
     if (message.indexOf("_a?") >= 0)
     {
-      slider_a = atoi(message.c_str()+message.indexOf("_a?")+3); //yep, i'm lazy....
+      slider_a = atoi(message.c_str() + message.indexOf("_a?") + 3); //yep, i'm lazy....
     }
     if (message.indexOf("_b?") >= 0)
     {
-      slider_b = atoi(message.c_str()+message.indexOf("_b?")+3);
+      slider_b = atoi(message.c_str() + message.indexOf("_b?") + 3);
     }
 
     if (message.indexOf("_m?") >= 0)
     {
-      slider_m = atoi(message.c_str()+message.indexOf("_m?")+3);
+      slider_m = atoi(message.c_str() + message.indexOf("_m?") + 3);
     }
+    // dutyCycle1 = map(sliderValue1.toInt(), 0, 100, 0, 255);
 
-   
-     // dutyCycle1 = map(sliderValue1.toInt(), 0, 100, 0, 255);
-      
     slider_values["slider_a"] = slider_a;
     slider_values["slider_b"] = slider_b;
     slider_values["slider_m"] = slider_m;
     json_string = JSON.stringify(slider_values);
     ws.textAll(json_string);
-
   }
 }
 
@@ -188,21 +192,22 @@ void setup() {
   init_wifi();
   init_ws();
 
-  server.on("/", HTTP_GET, [](AsyncWebServerRequest * request) 
+  server.on("/", HTTP_GET, [](AsyncWebServerRequest * request)
   {
-    request->send(SPIFFS, "/index.html", "text/html");
+    request->send(SPIFFS, "/index.html", "text/html", false, template_processor);
   });
-  server.on("/config", HTTP_GET, [](AsyncWebServerRequest * request) 
+
+  server.on("/config", HTTP_GET, [](AsyncWebServerRequest * request)
   {
     request->send(SPIFFS, "/config.html", "text/html");
   });
 
-  server.on("/config_post", HTTP_POST, [](AsyncWebServerRequest * request) 
+  server.on("/config_post", HTTP_POST, [](AsyncWebServerRequest * request)
   {
-    if (request->hasParam("ssid",true) && request->getParam("ssid",true)->value() != "" ) ssid = request->getParam("ssid",true)->value();
-    if (request->hasParam("password",true) && request->getParam("password",true)->value() != "") password = request->getParam("password",true)->value();
-    if (request->hasParam("hostname",true)&& request->getParam("hostname",true)->value() != "") hostname = request->getParam("hostname",true)->value();
-    
+    if (request->hasParam("ssid", true) && request->getParam("ssid", true)->value() != "" ) ssid = request->getParam("ssid", true)->value();
+    if (request->hasParam("password", true) && request->getParam("password", true)->value() != "") password = request->getParam("password", true)->value();
+    if (request->hasParam("hostname", true) && request->getParam("hostname", true)->value() != "") hostname = request->getParam("hostname", true)->value();
+
     Serial.println("ssid: " + ssid);
     Serial.println("password: " + password);
     Serial.println("hostname: " + hostname);
@@ -215,7 +220,7 @@ void setup() {
     request->send(200, "text/plain", "CONFIG UPDATED");
   });
 
-  server.on("/reset", HTTP_GET, [](AsyncWebServerRequest * request) 
+  server.on("/reset", HTTP_GET, [](AsyncWebServerRequest * request)
   {
     preferences.begin(preferences_namespace.c_str(), false);
     preferences.clear();
