@@ -15,7 +15,7 @@ const int retry_limit = 11;
   [0xJJ 0xKK]... - Value(s) to set address to
   0xCC - Checksum
 */
-void mk312_write (uint16_t address, char* payload, size_t length)
+void mk312_write (uint16_t address, byte* payload, size_t length)
 {
   if (length > 8)
   {
@@ -45,6 +45,8 @@ void mk312_write (uint16_t address, char* payload, size_t length)
   {
     Serial2.read();
   }
+  delay(5);
+  Serial2.read();
   Serial2.write(c, length + 4);
   Serial.printf("sent %02x%02x%02x%02x%02x%02x\n", c[0], c[1], c[2], c[3], c[4], c[5]);
   delay(20);
@@ -73,11 +75,7 @@ char mk312_read (uint16_t address)
   byte sum;
   size_t count;
   int i;
-  while (Serial2.available())
-  {
-    Serial2.read();
-  }
-
+ 
   c[0] = 0x3c;
   c[1] = (address >> 8) & 0xff;
   c[2] = address & 0xff;
@@ -88,8 +86,15 @@ char mk312_read (uint16_t address)
     c[i] = c[i] ^ key;
   }
 
+  while (Serial2.available())
+  {
+    Serial2.read();
+  }
+  delay(5);
+  Serial2.read();
   Serial2.write(c, 4);
-  count = Serial2.readBytes(c, 3);
+  delay(20);
+  count = Serial2.readBytes(c, 4);
   if (count > 0)
   {
     Serial.printf("got %d %02x%02x%02x\n", count, c[0], c[1], c[2]);
@@ -191,33 +196,48 @@ void mk312_sync() {
 
 void mk312_set_a(int percent)
 {
-
+  byte value = map(percent,0,100,0,255);
+  mk312_write(ADDRESS_LEVELA, &value, 1);
 }
 
 void mk312_set_b(int percent)
 {
-
+  byte value = map(percent,0,100,0,255);
+  mk312_write(ADDRESS_LEVELB, &value, 1);
 }
 
 void mk312_set_ma(int percent)
 {
+  byte ma_max;
+  byte ma_min;
+  byte value;
 
+  ma_max = mk312_read(ADDRESS_MA_MAX_VALUE);
+  ma_min = mk312_read(ADDRESS_MA_MIN_VALUE);
+  value = map(percent, 0,100,ma_min,ma_max);
+  Serial.printf("set_ma: max %02x min %02x val %02x",ma_max, ma_min, value);
+  mk312_write(ADDRESS_LEVELMA, &value, 1);
+  
 }
 void mk312_set_mode(byte newmode){
+  if (newmode == mk312_read(ADDRESS_CURRENT_MODE))
+  {
+    return;
+  }
+  mk312_write(ADDRESS_CURRENT_MODE, &newmode, 1);
   
 }
 
-
 void mk312_enable_adc()
 {
-  char c = mk312_read(ADDRESS_R15);
+  byte c = mk312_read(ADDRESS_R15);
   c = c & ~(1 << REGISTER_15_ADCDISABLE);
   mk312_write(ADDRESS_R15, &c, 1);
 }
 
 void mk312_disable_adc()
 {
-  char c = mk312_read(ADDRESS_R15);
+  byte c = mk312_read(ADDRESS_R15);
   c = c | 1 << REGISTER_15_ADCDISABLE;
   mk312_write(ADDRESS_R15, &c, 1);
 }

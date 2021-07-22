@@ -216,6 +216,7 @@ void init_ws()
 
 void setup() {
   Serial.begin(115200);
+  pinMode(LED_BUILTIN, OUTPUT);
   init_fs();
   init_preferences();
   init_wifi();
