@@ -40,6 +40,16 @@ function onMessage(event)
 
     for (const key in values) 
 	{
+		if (key === "mode")
+		{
+			document.getElementById(key+"_"+values[key]).checked = true;
+			continue;
+		}
+		if (key === "adc")
+		{
+			document.getElementById(key+"_"+values[key]).checked = true;
+			continue;
+		}
         document.getElementById(key+"_value").innerHTML = values[key];
         document.getElementById(key).value = values[key];
     }

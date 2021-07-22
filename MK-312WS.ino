@@ -29,10 +29,7 @@ String ssid;
 String password;
 String hostname;
 const String preferences_namespace = default_hostname;
-String message = "";
-int slider_a = 0;
-int slider_b = 0;
-int slider_m = 0;
+
 
 JSONVar values;
 String json_string;
@@ -133,112 +130,58 @@ void init_wifi()
 void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
 {
   AwsFrameInfo *info = (AwsFrameInfo*)arg;
+  int slider;
+  char* message;
+  byte newmode;
+
   if (info->final && info->index == 0 && info->len == len && info->opcode == WS_TEXT)
   {
     data[len] = 0;
     message = (char*)data;
-
+    Serial.println(message);
 
     switch (message[0])
     {
-
       case 's': //slider
+        slider = atoi(message + 9);
         switch (message[7])
         {
           case 'a':
-            slider_a = atoi(message.c_str() + 9);
-            values["slider_a"] = slider_a;
-            mk312_set_a(slider_a);
+            values["slider_a"] = slider;
+            mk312_set_a(slider);
             break;
 
           case 'b':
-            slider_b = atoi(message.c_str() + 9);
-            values["slider_b"] = slider_b;
-            mk312_set_b(slider_b);
+            values["slider_b"] = slider;
+            mk312_set_b(slider);
             break;
 
           case 'm':
-            slider_m = atoi(message.c_str() + 9);
-            values["slider_m"] = slider_m;
-            mk312_set_ma(slider_m);
+            values["slider_m"] = slider;
+            mk312_set_ma(slider);
             break;
         }
         break;
 
       case 'm'://mode
-        byte newmode;
-        switch (message[7]) //first letter of mode
+        newmode = strtol(message + 5, NULL, 16);
+        values["mode"] = message + 5;
+        mk312_set_mode(newmode);
+        break;
+
+      case 'a'://adc
+        values["adc"] = message + 4;
+        if (message[5] == 'n')//on
         {
-          case 'a'://audio1 to audio3
-            switch (message[12])
-            {
-              case '1':
-                newmode = MODE_AUDIO1;
-                break;
-              case '2':
-                newmode = MODE_AUDIO2;
-                break;
-              case '3':
-                newmode = MODE_AUDIO3;
-                break;
-            }
-            break;
-
-          case 'c'://climb, combo
-            break;
-
-          case 'i': //intense
-            break;
-
-          case 'o': //orgasm
-            break;
-
-          case 'p': //phase1 to 3
-            break;
-
-          case 'r': //random1 random2 rythm
-            break;
-
-          case 's': //stroke split
-            break;
-
-          case 't': // toggle torment
-            break;
-
-          case 'u'://user1 to user6
-            break;
-
-            mk312_set_mode(newmode);
+          mk312_enable_adc();
+        }
+        else
+        {
+          mk312_disable_adc();
         }
         break;
     }
 
-    /*#define MODE_AUDIO1 0x7c
-      #define MODE_AUDIO2 0x7d
-      #define MODE_AUDIO3 0x7e
-      #define MODE_CLIMB 0x78
-      #define MODE_COMBO 0x79
-      #define MODE_INTENSE 0x7a
-      #define MODE_ORGASM 0x83
-      #define MODE_PHASE1 0x85
-      #define MODE_PHASE2 0x86
-      #define MODE_PHASE3 0x87
-      #define MODE_RANDOM1 0x80
-      #define MODE_RANDOM2 0x81
-      #define MODE_RYTHM 0x7b
-      #define MODE_SPLIT 0x7f
-      #define MODE_STROKE 0x77
-      #define MODE_TOGGLE 0x82
-      #define MODE_TORMENT 0x84
-      #define MODE_USER1 0x88
-      #define MODE_USER2 0x89
-      #define MODE_USER3 0x8a
-      #define MODE_USER4 0x8b
-      #define MODE_USER5 0x8c
-      #define MODE_USER6 0x8d
-      #define MODE_USER7 0x8e
-      #define MODE_WAVES 0x76
-    */
     // dutyCycle1 = map(sliderValue1.toInt(), 0, 100, 0, 255);
 
     json_string = JSON.stringify(values);
@@ -270,15 +213,6 @@ void init_ws()
   server.addHandler(&ws);
 }
 
-void update_mk312()
-{
-  //  Serial.println("mk312 stuff):
-  /*  mk312_sync();
-    mk312_set_a(percent);
-    mk312_set_b(percent);
-    mk312_set_ma(percent);
-  */
-}
 
 void setup() {
   Serial.begin(115200);
@@ -288,9 +222,11 @@ void setup() {
   init_ws();
   init_mk312();
 
-  values["slider_a"] = slider_a;
-  values["slider_b"] = slider_b;
-  values["slider_m"] = slider_m;
+  values["slider_a"] = 0;
+  values["slider_b"] = 0;
+  values["slider_m"] = 0;
+  values["mode"] = "0x76";
+  values["adc"] = "on";
   json_string = JSON.stringify(values);
 
   server.on("/", HTTP_GET, [](AsyncWebServerRequest * request)
