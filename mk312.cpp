@@ -35,7 +35,6 @@ void mk312_write (uint16_t address, char* payload, size_t length)
   {
     c[i + 3] = payload[i];
     sum = (sum + payload[i]) & 0xff;
-    Serial.printf("i: %d sum %02x\n",i ,sum);
   }
   c[length + 3] = sum;
   for (i = 0; i < length + 4; i++)
@@ -209,10 +208,24 @@ void mk312_set_mode(byte newmode){
 }
 
 
+void mk312_enable_adc()
+{
+  char c = mk312_read(ADDRESS_R15);
+  c = c & ~(1 << REGISTER_15_ADCDISABLE);
+  mk312_write(ADDRESS_R15, &c, 1);
+}
+
+void mk312_disable_adc()
+{
+  char c = mk312_read(ADDRESS_R15);
+  c = c | 1 << REGISTER_15_ADCDISABLE;
+  mk312_write(ADDRESS_R15, &c, 1);
+}
+
 void init_mk312() {
   Serial2.begin(19200);
   Serial2.setTimeout(500);
-  mk312_sync();
+ // mk312_sync();
  // mk312_key_exchange();
- mk312_write (0x4010, "\xFE\xFF", 2);
+ // mk312_write (0x4010, "\xFE\xFF", 2);
 }
