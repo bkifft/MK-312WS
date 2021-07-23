@@ -25,7 +25,6 @@ void mk312_write (uint16_t address, byte* payload, size_t length)
   byte c[16];
   byte sum;
   int i;
-  size_t count;
   c[0] = 0x3d + (length << 4);
   c[1] = (address >> 8) & 0xff;
   c[2] = address & 0xff;
@@ -47,9 +46,9 @@ void mk312_write (uint16_t address, byte* payload, size_t length)
   delay(5);
   Serial2.read();
   Serial2.write(c, length + 4);
- // Serial.printf("sent %02x%02x%02x%02x%02x%02x\n", c[0], c[1], c[2], c[3], c[4], c[5]);
+  // Serial.printf("sent %02x%02x%02x%02x%02x%02x\n", c[0], c[1], c[2], c[3], c[4], c[5]);
   delay(20);
-  count = Serial2.readBytes(c, 1); //FIXME
+  Serial2.readBytes(c, 1); //FIXME
   if (c[0] != 0x06)
   {
     Serial.printf("error: received wrong write reply, got %02x\n", c[0]);
@@ -72,7 +71,6 @@ char mk312_read (uint16_t address)
 {
   byte c[4];
   byte sum;
-  size_t count;
   int i;
 
   c[0] = 0x3c;
@@ -93,11 +91,8 @@ char mk312_read (uint16_t address)
   Serial2.read();
   Serial2.write(c, 4);
   delay(20);
-  count = Serial2.readBytes(c, 4);
- /* if (count > 0)
-  {
-    Serial.printf("got %d %02x%02x%02x\n", count, c[0], c[1], c[2]);
-  }*/
+  Serial2.readBytes(c, 4);
+
   sum = c[0] + c[1];
 
   if (sum != c[2])
@@ -120,7 +115,6 @@ void mk312_key_exchange()
 {
   byte c[3] = {0x00};
   byte sum;
-  size_t count;
 
   c[0] = 0x2f; //setkey command
   c[1] = 0x00; //hostkey
@@ -130,14 +124,12 @@ void mk312_key_exchange()
   {
     Serial2.read();
   }
+  Serial2.read();
 
   Serial2.write(c, 3);
 
-  count = Serial2.readBytes(c, 3);
-  /*if (count > 0)
-  {
-    Serial.printf("got %d %02x%02x%02x\n", count, c[0], c[1], c[2]);
-  }*/
+  Serial2.readBytes(c, 3);
+
   sum = (c[0] + c[1]) & 0xff;;
   if (sum != c[2])
   {
@@ -171,15 +163,13 @@ void mk312_sync() {
     {
       Serial2.read();
     }
+    Serial2.read();
     Serial2.write(&c, 1);
-    //Serial.printf("sent %02x\n", c);
-
     count = Serial2.readBytes(&c, 1);
-    /*if (count > 0)
+    if (count > 0)
     {
-      Serial.printf("got %02x\n", c);
       break;
-    }*/
+    }
   }
 
   if (i >= retry_limit)
