@@ -155,9 +155,7 @@ void mk312_sync() {
   Serial.printf("mk312 sync. key %02x\n", key);
   for (i = 0; i < retry_limit; i++)
   {
-    Serial.print("i: "); Serial.println(i);
-
-    c = 0x00 ^ key;
+      c = 0x00 ^ key;
 
     while (Serial2.available())
     {
