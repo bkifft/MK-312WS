@@ -24,9 +24,8 @@ void mk312_write (uint16_t address, byte* payload, size_t length)
   }
   byte c[16];
   byte sum;
-  size_t count;
   int i;
-
+  size_t count;
   c[0] = 0x3d + (length << 4);
   c[1] = (address >> 8) & 0xff;
   c[2] = address & 0xff;
@@ -48,12 +47,12 @@ void mk312_write (uint16_t address, byte* payload, size_t length)
   delay(5);
   Serial2.read();
   Serial2.write(c, length + 4);
-  Serial.printf("sent %02x%02x%02x%02x%02x%02x\n", c[0], c[1], c[2], c[3], c[4], c[5]);
+ // Serial.printf("sent %02x%02x%02x%02x%02x%02x\n", c[0], c[1], c[2], c[3], c[4], c[5]);
   delay(20);
-  count = Serial2.readBytes(c, 16); //FIXME
-  if (count > 0)
+  count = Serial2.readBytes(c, 1); //FIXME
+  if (c[0] != 0x06)
   {
-    Serial.printf("got %d %02x%02x%02x%02x%02x%02x\n", count, c[0], c[1], c[2], c[3], c[4], c[5]);
+    Serial.printf("error: received wrong write reply, got %02x\n", c[0]);
   }
 
 }
@@ -75,7 +74,7 @@ char mk312_read (uint16_t address)
   byte sum;
   size_t count;
   int i;
- 
+
   c[0] = 0x3c;
   c[1] = (address >> 8) & 0xff;
   c[2] = address & 0xff;
@@ -95,10 +94,10 @@ char mk312_read (uint16_t address)
   Serial2.write(c, 4);
   delay(20);
   count = Serial2.readBytes(c, 4);
-  if (count > 0)
+ /* if (count > 0)
   {
     Serial.printf("got %d %02x%02x%02x\n", count, c[0], c[1], c[2]);
-  }
+  }*/
   sum = c[0] + c[1];
 
   if (sum != c[2])
@@ -135,10 +134,10 @@ void mk312_key_exchange()
   Serial2.write(c, 3);
 
   count = Serial2.readBytes(c, 3);
-  if (count > 0)
+  /*if (count > 0)
   {
     Serial.printf("got %d %02x%02x%02x\n", count, c[0], c[1], c[2]);
-  }
+  }*/
   sum = (c[0] + c[1]) & 0xff;;
   if (sum != c[2])
   {
@@ -173,14 +172,14 @@ void mk312_sync() {
       Serial2.read();
     }
     Serial2.write(&c, 1);
-    Serial.printf("sent %02x\n", c);
+    //Serial.printf("sent %02x\n", c);
 
     count = Serial2.readBytes(&c, 1);
-    if (count > 0)
+    /*if (count > 0)
     {
       Serial.printf("got %02x\n", c);
       break;
-    }
+    }*/
   }
 
   if (i >= retry_limit)
@@ -189,44 +188,16 @@ void mk312_sync() {
   }
   if (c != 0x07)
   {
-    Serial.println("error: mk312 sync wrong reply");
+    Serial.println("error: mk312 sync wrong reply, trying default key");
+    if (key != 0x55)
+    {
+      key = 0x55; //only works with modified firmware that allways uses 00. resulting key is 00^00^55
+      mk312_sync();
+    }
   }
 }
 
 
-void mk312_set_a(int percent)
-{
-  byte value = map(percent,0,100,0,255);
-  mk312_write(ADDRESS_LEVELA, &value, 1);
-}
-
-void mk312_set_b(int percent)
-{
-  byte value = map(percent,0,100,0,255);
-  mk312_write(ADDRESS_LEVELB, &value, 1);
-}
-
-void mk312_set_ma(int percent)
-{
-  byte ma_max;
-  byte ma_min;
-  byte value;
-
-  ma_max = mk312_read(ADDRESS_MA_MAX_VALUE);
-  ma_min = mk312_read(ADDRESS_MA_MIN_VALUE);
-  value = map(percent, 0,100,ma_min,ma_max);
-  Serial.printf("set_ma: max %02x min %02x val %02x",ma_max, ma_min, value);
-  mk312_write(ADDRESS_LEVELMA, &value, 1);
-  
-}
-void mk312_set_mode(byte newmode){
-  if (newmode == mk312_read(ADDRESS_CURRENT_MODE))
-  {
-    return;
-  }
-  mk312_write(ADDRESS_CURRENT_MODE, &newmode, 1);
-  
-}
 
 void mk312_enable_adc()
 {
@@ -238,14 +209,79 @@ void mk312_enable_adc()
 void mk312_disable_adc()
 {
   byte c = mk312_read(ADDRESS_R15);
-  c = c | 1 << REGISTER_15_ADCDISABLE;
+  c = c | (1 << REGISTER_15_ADCDISABLE);
   mk312_write(ADDRESS_R15, &c, 1);
+}
+
+bool mk312_get_adc_disabled()
+{
+  byte c = mk312_read(ADDRESS_R15);
+
+  if (c & (1 << REGISTER_15_ADCDISABLE))
+  {
+    return true;
+  }
+  return false;
+}
+
+
+void mk312_set_a(int percent)
+{
+  if (!mk312_get_adc_disabled())
+  {
+    return;
+  }
+  byte value = map(percent, 0, 100, 0, 255);
+  mk312_write(ADDRESS_LEVELA, &value, 1);
+}
+
+void mk312_set_b(int percent)
+{
+  if (!mk312_get_adc_disabled())
+  {
+    return;
+  }
+  byte value = map(percent, 0, 100, 0, 255);
+  mk312_write(ADDRESS_LEVELB, &value, 1);
+}
+
+void mk312_set_ma(int percent)
+{
+  if (!mk312_get_adc_disabled())
+  {
+    return;
+  }
+  byte ma_max;
+  byte ma_min;
+  byte value;
+
+  ma_max = mk312_read(ADDRESS_MA_MAX_VALUE);
+  ma_min = mk312_read(ADDRESS_MA_MIN_VALUE);
+  value = map(percent, 0, 100, ma_max, ma_min);
+  Serial.printf("set_ma: max %02x min %02x val %02x", ma_max, ma_min, value);
+  mk312_write(ADDRESS_LEVELMA, &value, 1);
+
+}
+
+void mk312_set_mode(byte newmode)
+{
+  if (newmode == mk312_read(ADDRESS_CURRENT_MODE))
+  {
+    return;
+  }
+  byte commands[2] =
+  {
+    COMMAND_EXIT_MENU,
+    COMMAND_NEW_MODE
+  };
+  mk312_write(ADDRESS_CURRENT_MODE, &newmode, 1);
+  mk312_write(ADDRESS_COMMAND_1, commands, 2);
 }
 
 void init_mk312() {
   Serial2.begin(19200);
   Serial2.setTimeout(500);
- // mk312_sync();
- // mk312_key_exchange();
- // mk312_write (0x4010, "\xFE\xFF", 2);
+  mk312_sync();
+  mk312_key_exchange();
+  // mk312_write (0x4010, "\xFE\xFF", 2);
 }

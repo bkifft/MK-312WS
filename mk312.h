@@ -88,5 +88,5 @@ void mk312_set_ma(int percent);
 void mk312_set_mode(byte newmode);
 void mk312_enable_adc();
 void mk312_disable_adc();
-
+bool mk312_get_adc_disabled();
 #endif //MK312_H
