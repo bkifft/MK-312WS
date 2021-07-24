@@ -277,4 +277,50 @@ Text GLabel 9200 4100 2    50   Input ~ 0
 TXD_Vout
 Text GLabel 4950 2600 0    50   Input ~ 0
 EN_3V3
+Text GLabel 6000 3400 2    50   Input ~ 0
+DEBUG_TXD
+Text GLabel 6000 3500 2    50   Input ~ 0
+DEBUG_RXD
+Text GLabel 8450 5250 2    50   Input ~ 0
+DEBUG_TXD
+Text GLabel 8450 5150 2    50   Input ~ 0
+DEBUG_RXD
+$Comp
+L Connector:Conn_01x02_Male J2
+U 1 1 60FCB3BE
+P 8250 5150
+F 0 "J2" H 8358 5331 50  0000 C CNN
+F 1 "Conn_01x02_Male" H 8358 5240 50  0000 C CNN
+F 2 "Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical" H 8250 5150 50  0001 C CNN
+F 3 "~" H 8250 5150 50  0001 C CNN
+	1    8250 5150
+	1    0    0    -1  
+$EndComp
+NoConn ~ 6000 3300
+NoConn ~ 6000 3600
+NoConn ~ 6000 3700
+NoConn ~ 6000 3800
+NoConn ~ 6000 3900
+NoConn ~ 6000 2800
+NoConn ~ 4950 2700
+NoConn ~ 4950 2800
+NoConn ~ 4950 2900
+NoConn ~ 4950 3000
+NoConn ~ 4950 3100
+NoConn ~ 4950 3400
+NoConn ~ 4950 3500
+NoConn ~ 4950 3600
+NoConn ~ 4950 3700
+NoConn ~ 4950 3800
+NoConn ~ 4950 3900
+NoConn ~ 4950 4000
+NoConn ~ 4950 4100
+NoConn ~ 4950 4200
+NoConn ~ 4950 4300
+NoConn ~ 4950 4400
+NoConn ~ 4950 4500
+NoConn ~ 4950 4600
+NoConn ~ 4950 4700
+NoConn ~ 4950 2500
+NoConn ~ 4950 2300
 $EndSCHEMATC
