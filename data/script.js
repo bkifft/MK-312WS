@@ -50,6 +50,12 @@ function onMessage(event)
 			document.getElementById(key+"_"+values[key]).checked = true;
 			continue;
 		}
+		if (key === "battery")
+		{
+		    document.getElementById(key+"_value").innerHTML = values[key];
+            continue;	
+		}
+		
         document.getElementById(key+"_value").innerHTML = values[key];
         document.getElementById(key).value = values[key];
     }

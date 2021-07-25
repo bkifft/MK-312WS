@@ -17,9 +17,11 @@ const String default_hostname = "MK-312WS";
 const String default_ssid = "asdfg";
 const String default_password = "12345678"; //needs to be at least 8 chars long for AP mode
 const int retry_limit = 10;
+const int task_delay_ms = 500;
 
 /////////
 
+const char* hex_table = "0123456789abcdef";
 
 AsyncWebServer server(80);
 AsyncWebSocket ws("/ws");
@@ -122,11 +124,14 @@ void init_wifi()
   }
 }
 
+void update_knobs()
+{
+  values["slider_a"] = mk312_get_a();
+  values["slider_b"] = mk312_get_b();
+  values["slider_m"] = mk312_get_ma();
+  
+}
 
-/*
-   rewrite this.
-   switch on first letter, split at ?, switch sliders for ?-1, switch mode for first and last letter
-*/
 void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
 {
   AwsFrameInfo *info = (AwsFrameInfo*)arg;
@@ -142,35 +147,61 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
 
     switch (message[0])
     {
+      case 'r':
+        switch (message[5])
+        {
+          case 'l':
+            values["ramp_level"] = mk312_get_ramp_level();
+
+            break;
+
+          case 't':
+            values["ramp_time"] = mk312_get_ramp_time();
+
+            break;
+          case 's':
+          //  mk312_ramp_start();
+            break;
+        }
+        break;
+
       case 's': //slider
         slider = atoi(message + 9);
         switch (message[7])
         {
           case 'a':
-            values["slider_a"] = slider;
             mk312_set_a(slider);
+            values["slider_a"] = mk312_get_a();
             break;
 
           case 'b':
-            values["slider_b"] = slider;
             mk312_set_b(slider);
+            values["slider_b"] = mk312_get_b();
             break;
 
           case 'm':
-            values["slider_m"] = slider;
             mk312_set_ma(slider);
+            values["slider_m"] = mk312_get_ma();
             break;
         }
         break;
 
       case 'm'://mode
+        char c[5];
         newmode = strtol(message + 5, NULL, 16);
-        values["mode"] = message + 5;
         mk312_set_mode(newmode);
+
+        //this puts the mode char as human readable 0x notation into c[]
+        c[0] = mk312_get_mode();
+        c[1] = 'x';
+        c[2] = hex_table[c[0] >> 4];
+        c[3] = hex_table[c[0] & 0xf];
+        c[0] = '0';
+        c[4] = '\0';
+        values["mode"] = c;
         break;
 
       case 'a'://adc
-        values["adc"] = message + 4;
         if (message[5] == 'n')//on
         {
           mk312_enable_adc();
@@ -179,11 +210,13 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
         {
           mk312_disable_adc();
         }
+        values["adc"] = mk312_get_adc_disabled() ? "off" : "on";
+        update_knobs();
         break;
     }
 
     // dutyCycle1 = map(sliderValue1.toInt(), 0, 100, 0, 255);
-
+    values["battery"] = mk312_get_battery_level();
     json_string = JSON.stringify(values);
     ws.textAll(json_string);
   }
@@ -221,13 +254,16 @@ void setup() {
   init_preferences();
   init_wifi();
   init_ws();
-  init_mk312();
+  init_mk312_easy();
 
   values["slider_a"] = 0;
   values["slider_b"] = 0;
   values["slider_m"] = 0;
   values["mode"] = "0x76";
   values["adc"] = "on";
+  values["ramp_level"] = 5;
+  values["ramp_time"] = 5;
+
   json_string = JSON.stringify(values);
 
   server.on("/", HTTP_GET, [](AsyncWebServerRequest * request)
@@ -272,6 +308,9 @@ void setup() {
 
 }
 
+
+
 void loop() {
+
   ws.cleanupClients();
 }

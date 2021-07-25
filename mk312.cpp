@@ -2,7 +2,7 @@
 #include <HardwareSerial.h>
 #include "mk312.h"
 
-byte key = 0x00;
+byte key = 0x55;
 const int retry_limit = 11;
 
 
@@ -43,12 +43,12 @@ void mk312_write (uint16_t address, byte* payload, size_t length)
   {
     Serial2.read();
   }
-  delay(5);
-  Serial2.read();
+  // delay(5);
+  //  Serial2.read();
   Serial2.write(c, length + 4);
   // Serial.printf("sent %02x%02x%02x%02x%02x%02x\n", c[0], c[1], c[2], c[3], c[4], c[5]);
   delay(20);
-  Serial2.readBytes(c, 1); //FIXME
+  Serial2.readBytes(c, 1);
   if (c[0] != 0x06)
   {
     Serial.printf("error: received wrong write reply, got %02x\n", c[0]);
@@ -87,11 +87,11 @@ char mk312_read (uint16_t address)
   {
     Serial2.read();
   }
-  delay(5);
-  Serial2.read();
+  //delay(5);
+  //Serial2.read();
   Serial2.write(c, 4);
-  delay(20);
-  Serial2.readBytes(c, 4);
+  //delay(20);
+  Serial2.readBytes(c, 3);
 
   sum = c[0] + c[1];
 
@@ -124,7 +124,7 @@ void mk312_key_exchange()
   {
     Serial2.read();
   }
-  Serial2.read();
+  // Serial2.read();
 
   Serial2.write(c, 3);
 
@@ -155,13 +155,12 @@ void mk312_sync() {
   Serial.printf("mk312 sync. key %02x\n", key);
   for (i = 0; i < retry_limit; i++)
   {
-      c = 0x00 ^ key;
+    c = 0x00 ^ key;
 
     while (Serial2.available())
     {
       Serial2.read();
     }
-    Serial2.read();
     Serial2.write(&c, 1);
     count = Serial2.readBytes(&c, 1);
     if (count > 0)
@@ -219,7 +218,7 @@ void mk312_set_a(int percent)
   {
     return;
   }
-  byte value = map(percent, 0, 100, 0, 255);
+  byte value = map(percent, 0, 99, 0, 255);
   mk312_write(ADDRESS_LEVELA, &value, 1);
 }
 
@@ -229,7 +228,7 @@ void mk312_set_b(int percent)
   {
     return;
   }
-  byte value = map(percent, 0, 100, 0, 255);
+  byte value = map(percent, 0, 99, 0, 255);
   mk312_write(ADDRESS_LEVELB, &value, 1);
 }
 
@@ -266,10 +265,128 @@ void mk312_set_mode(byte newmode)
   mk312_write(ADDRESS_COMMAND_1, commands, 2);
 }
 
+byte mk312_get_ramp_level()
+{
+  return mk312_read(ADDRESS_RAMP_LEVEL);
+}
+
+byte mk312_get_ramp_time()
+{
+  return mk312_read(ADDRESS_RAMP_TIME);
+
+}
+
+void mk312_ramp_start()
+{
+  byte c = COMMAND_START_RAMP;
+  mk312_write(ADDRESS_COMMAND_1, &c, 1);
+}
+
+int mk312_get_battery_level()
+{
+
+  return mk312_read(ADDRESS_BATTERY_LEVEL);
+}
+
 void init_mk312() {
   Serial2.begin(19200);
   Serial2.setTimeout(500);
   mk312_sync();
   mk312_key_exchange();
   // mk312_write (0x4010, "\xFE\xFF", 2);
+}
+
+int mk312_get_a()
+{
+  int value;
+  value = mk312_read(ADDRESS_LEVELA);
+  value = map(value, 0, 255, 0, 99);
+  return value;
+}
+
+int mk312_get_b()
+{
+  int value;
+  value = mk312_read(ADDRESS_LEVELB);
+  value = map(value, 0, 255, 0, 99);
+  return value;
+}
+
+int mk312_get_ma()
+{
+  byte ma_max;
+  byte ma_min;
+  byte value;
+
+  ma_max = mk312_read(ADDRESS_MA_MAX_VALUE);
+  ma_min = mk312_read(ADDRESS_MA_MIN_VALUE);
+  value = mk312_read(ADDRESS_LEVELMA);
+  value = map(value,  ma_max, ma_min, 0, 99);
+  return value;
+}
+
+byte mk312_get_mode()
+{
+  return mk312_read(ADDRESS_CURRENT_MODE);
+}
+
+void init_mk312_easy()
+{
+  int i;
+  byte buffer[16];
+  int retry_count = 11;
+  Serial2.begin(19200);
+  Serial2.setTimeout(500);
+
+  while (Serial2.available()) //flush
+  {
+    Serial2.read();
+  }
+  Serial.write("mk312_init_easy first");
+  for (i = 0; i < retry_count; i++)
+  {
+    Serial2.write(0x00);
+    Serial.write('.');
+    Serial2.readBytes(buffer, 1);
+    if (buffer[0] == 0x07)
+    {
+      break;
+    }
+  }
+while (Serial2.available()) //flush
+  {
+    Serial2.read();
+  }
+  buffer[0] = 0x2f;
+  buffer[1] = 0x00;
+  buffer[2] = 0x2f;
+  Serial2.write(buffer, 3);
+  Serial2.readBytes(buffer, 3);
+  Serial.printf("got %02x%02x%02x\n",buffer[0],buffer[1],buffer[2]);
+
+  while (Serial2.available()) //flush
+  {
+    Serial2.read();
+  }
+  Serial.write("mk312_init_easy second");
+  for (i = 0; i < retry_count; i++)
+  {
+    Serial2.write(0x55);
+    Serial.write('.');
+    Serial2.readBytes(buffer, 1);
+    if (buffer[0] == 0x07)
+    {
+      break;
+    }
+  }
+  if (i >= retry_count)
+  {
+    Serial.println("sync error");
+  }
+  else
+  {
+    Serial.println("hi");
+  }
+  Serial2.setTimeout(500);
+
 }

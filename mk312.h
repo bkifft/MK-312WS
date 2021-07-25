@@ -24,6 +24,10 @@
 #define ADDRESS_LEVELMA 0x420D
 #define ADDRESS_KEY 0x4213
 
+#define ADDRESS_RAMP_LEVEL 0x41f8
+#define ADDRESS_RAMP_TIME 0x41f9
+
+
 // EEPROM addresses
 #define EEPROM_ADDRESS_POWER_LEVEL 0x8009
 #define EEPROM_ADDRESS_FAVORITE_MODE 0x800C
@@ -35,6 +39,8 @@
 #define COMMAND_NEW_MODE 0x12
 #define COMMAND_WRITE_STRING_TO_LCD 0x15
 #define COMMAND_NO_COMMAND 0xff
+
+#define COMMAND_START_RAMP 0x21
 
 // Modes
 #define MODE_POWERON 0x00
@@ -86,7 +92,18 @@ void mk312_set_a(int percent);
 void mk312_set_b(int percent);
 void mk312_set_ma(int percent);
 void mk312_set_mode(byte newmode);
+
+int mk312_get_a();
+int mk312_get_b();
+int mk312_get_ma();
+byte mk312_get_mode();
+
 void mk312_enable_adc();
 void mk312_disable_adc();
 bool mk312_get_adc_disabled();
+byte mk312_get_ramp_level();
+byte mk312_get_ramp_time();
+void mk312_ramp_start();
+int mk312_get_battery_level();
+void init_mk312_easy();
 #endif //MK312_H

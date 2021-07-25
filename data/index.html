@@ -15,21 +15,21 @@
             <div class="card">
                 <p class="card-title">Power A</p>
                 <p class="switch">
-                    <input type="range" onchange="update_slider(this)" id="slider_a" min="0" max="100" step="1" value ="0" class="slider">
+                    <input type="range" onchange="update_slider(this)" id="slider_a" min="0" max="99" step="1" value ="0" class="slider">
                 </p>
                 <p class="state"><span id="slider_a_value"></span> &percnt;</p>
             </div>
             <div class="card">
                 <p class="card-title">Power B</p>
                 <p class="switch">
-                    <input type="range" onchange="update_slider(this)" id="slider_b" min="0" max="100" step="1" value ="0" class="slider">
+                    <input type="range" onchange="update_slider(this)" id="slider_b" min="0" max="99" step="1" value ="0" class="slider">
                 </p>
                 <p class="state"><span id="slider_b_value"></span> &percnt;</p>
             </div>
             <div class="card">
                 <p class="card-title">Multi Adjust</p>
                 <p class="switch">
-                    <input type="range" onchange="update_slider(this)" id="slider_m" min="0" max="100" step="1" value ="0" class="slider">
+                    <input type="range" onchange="update_slider(this)" id="slider_m" min="0" max="99" step="1" value ="0" class="slider">
                 </p>
                 <p class="state"><span id="slider_m_value"></span> &percnt;</p>
             </div>
@@ -79,7 +79,24 @@
 					</div>
 				</p>
 			</div>
-			
+			<div class="card">
+                <p class="card-title">Ramp level</p>
+                <p class="switch">
+                    <input type="range" onchange="update_slider(this)" id="ramp_level" min="0" max="100" step="1" value ="0" class="slider">
+                </p>
+                <p class="state"><span id="ramp_level_value"></span> &percnt;</p>
+                <p class="card-title">Ramp time</p>
+                                <p class="switch">
+                    <input type="range" onchange="update_slider(this)" id="ramp_time" min="0" max="100" step="1" value ="0" class="slider">
+                </p>
+                <p class="state"><span id="ramp_time_value"></span> &percnt;</p>
+                <input type="button" onchange="update_slider(this)" id="ramp_start" value="Start Ramp" class="button">
+            </div>
+			 <div class="card">
+                <p class="card-title">Battery</p>
+                
+                <p class="state"><span id="battery_value"></span> &percnt;</p>
+            </div>
 			
         </div>
     </div>
