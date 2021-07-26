@@ -106,4 +106,6 @@ byte mk312_get_ramp_time();
 void mk312_ramp_start();
 int mk312_get_battery_level();
 void init_mk312_easy();
+void mk312_bruteforce_ramp();
+
 #endif //MK312_H

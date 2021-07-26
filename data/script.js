@@ -33,6 +33,10 @@ function update_radio(element) {
     websocket.send(element.name + "?" + value.toString());
 }
 
+function update_button(element) {
+    websocket.send(element.name);
+}
+
 function onMessage(event) 
 {
     console.log(event.data);

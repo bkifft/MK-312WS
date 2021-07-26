@@ -22,6 +22,7 @@ const int retry_limit = 10;
 const int task_delay_ms = 500;
 
 /////////
+byte bruteforce = 0x00;
 
 const char* hex_table = "0123456789abcdef";
 
@@ -80,7 +81,6 @@ void init_preferences()
     Serial.println("preferences loaded");
   }
   Serial.println("ssid: " + ssid);
-  Serial.println("password: " + password);
   Serial.println("hostname: " + hostname);
 }
 
@@ -112,7 +112,7 @@ void init_wifi()
   else
   {
     WiFi.disconnect();
-    WiFi.softAP(default_ssid.c_str(), default_password.c_str());
+    WiFi.softAP(ssid.c_str(), default_password.c_str());
     Serial.println("AP-Mode");
     Serial.print("IP address: ");
     Serial.println(WiFi.softAPIP());
@@ -148,6 +148,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
     data[len] = 0;
     message = (char*)data;
     Serial.println(message);
+    debug(message);
 
     switch (message[0])
     {
@@ -164,7 +165,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
 
             break;
           case 's':
-            //  mk312_ramp_start();
+            mk312_ramp_start();
             break;
         }
         break;
@@ -296,7 +297,6 @@ void setup() {
     if (request->hasParam("hostname", true) && request->getParam("hostname", true)->value() != "") hostname = request->getParam("hostname", true)->value();
 
     Serial.println("ssid: " + ssid);
-    Serial.println("password: " + password);
     Serial.println("hostname: " + hostname);
 
     preferences.begin(preferences_namespace.c_str(), false);
@@ -326,28 +326,32 @@ void free_buffer()
 {
   byte d;
   while (debug_buffer.pop(d))
-      {
-        if (d == '\n')
-        {
-          break;
-        }
-      }
+  {
+    if (d == '\n')
+    {
+      break;
+    }
+  }
 }
 
 void debug(char* msg)
 {
   for (int i = 0; i < strlen(msg); i++)
   {
-     if (!debug_buffer.push(msg[i]))
+    if (!debug_buffer.push(msg[i]))
     {
+      free_buffer();
       free_buffer();
       debug_buffer.push(msg[i]);
     }
   }
+  debug_buffer.push('\n');
 }
 void loop() {
   while (Serial.available())
   {
+    //mk312_bruteforce_ramp();
+
     byte c = Serial.read();
     if (c == '\0')
     {
@@ -356,8 +360,10 @@ void loop() {
     if (!debug_buffer.push(c))
     {
       free_buffer();
+      free_buffer();
       debug_buffer.push(c);
     }
+    debug_buffer.push('\n');
   }
   ws.cleanupClients();
 

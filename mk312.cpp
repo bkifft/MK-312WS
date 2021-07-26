@@ -4,6 +4,8 @@
 
 byte key = 0x55;
 const int retry_limit = 11;
+byte brutenow = 0x00;
+byte brute[2];
 
 
 /*
@@ -130,7 +132,7 @@ void mk312_key_exchange()
 
   Serial2.readBytes(c, 3);
 
-  sum = (c[0] + c[1]) & 0xff;;
+  sum = (c[0] + c[1]) & 0xff;
   if (sum != c[2])
   {
     Serial.printf("error: wrong key exchange checksum got %02x calc %02x\n", c[2], sum);
@@ -184,7 +186,13 @@ void mk312_sync() {
   }
 }
 
-
+void mk312_bruteforce_ramp()
+{
+ brute[0]=0x21;
+ brute[1]= brutenow++;
+ Serial.printf("brute sending %02x %02x\n", brute[0], brute[1]);
+ mk312_write(ADDRESS_COMMAND_1, brute, 2);
+}
 
 void mk312_enable_adc()
 {
@@ -278,8 +286,8 @@ byte mk312_get_ramp_time()
 
 void mk312_ramp_start()
 {
-  byte c = COMMAND_START_RAMP;
-  mk312_write(ADDRESS_COMMAND_1, &c, 1);
+  byte c[2] = { COMMAND_START_RAMP, 0x02};
+  mk312_write(ADDRESS_COMMAND_1, c, 2);
 }
 
 int mk312_get_battery_level()
