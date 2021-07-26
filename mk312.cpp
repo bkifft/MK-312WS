@@ -188,10 +188,10 @@ void mk312_sync() {
 
 void mk312_bruteforce_ramp()
 {
- brute[0]=0x21;
- brute[1]= brutenow++;
- Serial.printf("brute sending %02x %02x\n", brute[0], brute[1]);
- mk312_write(ADDRESS_COMMAND_1, brute, 2);
+  brute[0] = 0x21;
+  brute[1] = brutenow++;
+  Serial.printf("brute sending %02x %02x\n", brute[0], brute[1]);
+  mk312_write(ADDRESS_COMMAND_1, brute, 2);
 }
 
 void mk312_enable_adc()
@@ -292,8 +292,7 @@ void mk312_ramp_start()
 
 int mk312_get_battery_level()
 {
-
-  return mk312_read(ADDRESS_BATTERY_LEVEL);
+  return map(mk312_read(ADDRESS_BATTERY_LEVEL), 0, 255, 0, 99);
 }
 
 void init_mk312() {
@@ -361,7 +360,7 @@ void init_mk312_easy()
       break;
     }
   }
-while (Serial2.available()) //flush
+  while (Serial2.available()) //flush
   {
     Serial2.read();
   }
@@ -370,7 +369,7 @@ while (Serial2.available()) //flush
   buffer[2] = 0x2f;
   Serial2.write(buffer, 3);
   Serial2.readBytes(buffer, 3);
-  Serial.printf("got %02x%02x%02x\n",buffer[0],buffer[1],buffer[2]);
+  Serial.printf("got %02x%02x%02x\n", buffer[0], buffer[1], buffer[2]);
 
   while (Serial2.available()) //flush
   {
