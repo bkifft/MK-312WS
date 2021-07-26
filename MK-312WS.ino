@@ -7,6 +7,8 @@
 #include <ESPmDNS.h>
 #include <Preferences.h>
 #include <AsyncElegantOTA.h>
+#include <RingBuf.h>
+
 #include "mk312.h"
 
 //////////change here
@@ -31,6 +33,8 @@ String ssid;
 String password;
 String hostname;
 const String preferences_namespace = default_hostname;
+RingBuf<byte, 4096> debug_buffer;
+char debug_out[4096];
 
 
 JSONVar values;
@@ -129,7 +133,7 @@ void update_knobs()
   values["slider_a"] = mk312_get_a();
   values["slider_b"] = mk312_get_b();
   values["slider_m"] = mk312_get_ma();
-  
+
 }
 
 void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
@@ -160,7 +164,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
 
             break;
           case 's':
-          //  mk312_ramp_start();
+            //  mk312_ramp_start();
             break;
         }
         break;
@@ -276,6 +280,15 @@ void setup() {
     request->send(SPIFFS, "/config.html", "text/html");
   });
 
+  server.on("/debug", HTTP_GET, [](AsyncWebServerRequest * request)
+  {
+    for (int i = 0; i < debug_buffer.size(); i++)
+    {
+      debug_out[i] = debug_buffer[i];
+    }
+    request->send(200, "text/plain", debug_out);
+  });
+
   server.on("/config_post", HTTP_POST, [](AsyncWebServerRequest * request)
   {
     if (request->hasParam("ssid", true) && request->getParam("ssid", true)->value() != "" ) ssid = request->getParam("ssid", true)->value();
@@ -309,8 +322,43 @@ void setup() {
 }
 
 
+void free_buffer()
+{
+  byte d;
+  while (debug_buffer.pop(d))
+      {
+        if (d == '\n')
+        {
+          break;
+        }
+      }
+}
 
+void debug(char* msg)
+{
+  for (int i = 0; i < strlen(msg); i++)
+  {
+     if (!debug_buffer.push(msg[i]))
+    {
+      free_buffer();
+      debug_buffer.push(msg[i]);
+    }
+  }
+}
 void loop() {
-
+  while (Serial.available())
+  {
+    byte c = Serial.read();
+    if (c == '\0')
+    {
+      c = '\1';
+    }
+    if (!debug_buffer.push(c))
+    {
+      free_buffer();
+      debug_buffer.push(c);
+    }
+  }
   ws.cleanupClients();
+
 }
