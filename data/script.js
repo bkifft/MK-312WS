@@ -62,5 +62,14 @@ function onMessage(event)
 		
         document.getElementById(key+"_value").innerHTML = values[key];
         document.getElementById(key).value = values[key];
+        if (values["adc"] === "on")
+        {
+			document.getElementById(key).disabled = true;
+		}
+		else
+		{
+			document.getElementById(key).disabled = false;
+		}
+		
     }
 }

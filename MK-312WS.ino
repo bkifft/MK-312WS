@@ -156,12 +156,12 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
         switch (message[5])
         {
           case 'l':
-            values["ramp_level"] = mk312_get_ramp_level();
+       //     values["ramp_level"] = mk312_get_ramp_level();
 
             break;
 
           case 't':
-            values["ramp_time"] = mk312_get_ramp_time();
+         //   values["ramp_time"] = mk312_get_ramp_time();
 
             break;
           case 's':
@@ -266,8 +266,9 @@ void setup() {
   values["slider_m"] = 0;
   values["mode"] = "0x76";
   values["adc"] = "on";
-  values["ramp_level"] = 5;
-  values["ramp_time"] = 5;
+  values["battery"] = 0;
+  //values["ramp_level"] = 5;
+  //values["ramp_time"] = 5;
 
   json_string = JSON.stringify(values);
 
