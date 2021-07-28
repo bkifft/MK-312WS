@@ -1,5 +1,5 @@
 # MK-312WS
-ESP32 based webserver as replacement for the HC05/06 inside a MK-312BT
+ESP32 based webserver as replacement for the HC05/06 inside a MK-312BT.
 
 Can join a WPA2 encrypted WLAN, or be it's own AP.
 For now does the knobs, program, ramp and battery level. 
@@ -23,5 +23,5 @@ Howto:
 - Flash the filesystem.
 - Replace the BT module in the mk312. Remember to levelshift RX. Hookup according to plan. [todo]
 - Connect to the new AP, pw is 12345678.
-- Open http:\\192.168.4.1\config. Change the SSID if you want to continue AP mode, SSID and password to connect to a preexisting network.
-- Open http:\\mk-312ws.local and start zapping.
+- Open http://192.168.4.1/config. Change the SSID if you want to continue AP mode, SSID and password to connect to a preexisting network.
+- Open http://mk-312ws.local and start zapping.
