@@ -10,6 +10,7 @@
 #include <RingBuf.h>
 #include "BluetoothSerial.h"
 
+
 #include "mk312.h"
 
 //////////change here
@@ -23,7 +24,7 @@ const int retry_limit = 10;
 const int task_delay_ms = 500;
 
 /////////
-byte bruteforce = 0x00;
+SemaphoreHandle_t  semaphore_serial2 = xSemaphoreCreateBinary();
 
 const char* hex_table = "0123456789abcdef";
 
@@ -219,7 +220,13 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
         values["adc"] = mk312_get_adc_disabled() ? "off" : "on";
         update_knobs();
         break;
+
+        case 'b'://bytes
+        byte c[16];
+        break;
+        
     }
+      
 
     // dutyCycle1 = map(sliderValue1.toInt(), 0, 100, 0, 255);
     values["battery"] = mk312_get_battery_level();

@@ -45,11 +45,7 @@ void mk312_write (uint16_t address, byte* payload, size_t length)
   {
     Serial2.read();
   }
-  // delay(5);
-  //  Serial2.read();
   Serial2.write(c, length + 4);
-  // Serial.printf("sent %02x%02x%02x%02x%02x%02x\n", c[0], c[1], c[2], c[3], c[4], c[5]);
-  delay(20);
   Serial2.readBytes(c, 1);
   if (c[0] != 0x06)
   {
@@ -89,10 +85,7 @@ char mk312_read (uint16_t address)
   {
     Serial2.read();
   }
-  //delay(5);
-  //Serial2.read();
   Serial2.write(c, 4);
-  //delay(20);
   Serial2.readBytes(c, 3);
 
   sum = c[0] + c[1];
@@ -110,43 +103,6 @@ char mk312_read (uint16_t address)
   return c[1];
 
 }
-
-//[0x2f, 0xVV, 0xWW] sent to ET312
-//[0x21, 0xXX, 0xYY] is read from ET312
-void mk312_key_exchange()
-{
-  byte c[3] = {0x00};
-  byte sum;
-
-  c[0] = 0x2f; //setkey command
-  c[1] = 0x00; //hostkey
-  c[2] = 0x2f; //checksum
-
-  while (Serial2.available()) //flush
-  {
-    Serial2.read();
-  }
-  // Serial2.read();
-
-  Serial2.write(c, 3);
-
-  Serial2.readBytes(c, 3);
-
-  sum = (c[0] + c[1]) & 0xff;
-  if (sum != c[2])
-  {
-    Serial.printf("error: wrong key exchange checksum got %02x calc %02x\n", c[2], sum);
-  }
-  if (c[0] != 0x21)
-  {
-    Serial.printf("error: wrong key exchange reply got %02x\n", c[0]);
-  }
-
-  key = 0x55 ^ c[1];
-  Serial.printf("set key to %02x\n", key);
-
-}
-
 
 //write 0x00 untill reading 0x07. must happen no later than 11 bytes
 void mk312_sync() {
@@ -184,14 +140,6 @@ void mk312_sync() {
       mk312_sync();
     }
   }
-}
-
-void mk312_bruteforce_ramp()
-{
-  brute[0] = 0x21;
-  brute[1] = brutenow++;
-  Serial.printf("brute sending %02x %02x\n", brute[0], brute[1]);
-  mk312_write(ADDRESS_COMMAND_1, brute, 2);
 }
 
 void mk312_enable_adc()
@@ -293,14 +241,6 @@ void mk312_ramp_start()
 int mk312_get_battery_level()
 {
   return map(mk312_read(ADDRESS_BATTERY_LEVEL), 0, 255, 0, 99);
-}
-
-void init_mk312() {
-  Serial2.begin(19200);
-  Serial2.setTimeout(500);
-  mk312_sync();
-  mk312_key_exchange();
-  // mk312_write (0x4010, "\xFE\xFF", 2);
 }
 
 int mk312_get_a()
