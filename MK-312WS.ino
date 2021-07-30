@@ -18,7 +18,7 @@
 //#define FORCE_DEFAULT
 
 const String default_hostname = "MK-312WS";
-const String default_ssid = "asdfg";
+const String default_ssid = WiFi.macAddress();
 const String default_password = "12345678"; //needs to be at least 8 chars long for AP mode
 const int retry_limit = 10;
 const int task_delay_ms = 500;
@@ -34,7 +34,8 @@ Preferences preferences;
 String ssid;
 String password;
 String hostname;
-const String preferences_namespace = default_hostname;
+const String preferences_namespace = default_ssid.replace(":","-");
+
 RingBuf<byte, 4096> debug_buffer;
 char debug_out[4096];
 
