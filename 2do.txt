@@ -1,0 +1,4 @@
+- ensure only one actor uses serial2 at the same time. binary semaphore/mutex/atomic.
+- record/replay
+- raw byte websocket
+
