@@ -34,7 +34,7 @@ Preferences preferences;
 String ssid;
 String password;
 String hostname;
-const String preferences_namespace = default_ssid.replace(":","-");
+String preferences_namespace = WiFi.macAddress();
 
 RingBuf<byte, 4096> debug_buffer;
 char debug_out[4096];
@@ -58,6 +58,7 @@ void init_fs()
 
 void init_preferences()
 {
+  preferences_namespace.replace(":","-");
   Serial.println("loading preferences, namespace " + preferences_namespace);
   if (!preferences.begin(preferences_namespace.c_str()))
   {
