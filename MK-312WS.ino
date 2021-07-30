@@ -8,7 +8,7 @@
 #include <Preferences.h>
 #include <AsyncElegantOTA.h>
 #include <RingBuf.h>
-#include "BluetoothSerial.h"
+#include <BluetoothSerial.h>
 
 
 #include "mk312.h"
@@ -24,7 +24,6 @@ const int retry_limit = 10;
 const int task_delay_ms = 500;
 
 /////////
-SemaphoreHandle_t  semaphore_serial2 = xSemaphoreCreateBinary();
 
 const char* hex_table = "0123456789abcdef";
 
@@ -151,6 +150,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
     message = (char*)data;
     Serial.println(message);
     debug(message);
+    char c[16];
 
     switch (message[0])
     {
@@ -194,7 +194,6 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
         break;
 
       case 'm'://mode
-        char c[5];
         newmode = strtol(message + 5, NULL, 16);
         mk312_set_mode(newmode);
 
@@ -222,7 +221,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
         break;
 
         case 'b'://bytes
-        byte c[16];
+        
         break;
         
     }

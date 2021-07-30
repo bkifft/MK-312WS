@@ -2,6 +2,9 @@
 #include <HardwareSerial.h>
 #include "mk312.h"
 
+
+
+SemaphoreHandle_t  semaphore_serial2;
 byte key = 0x55;
 const int retry_limit = 11;
 byte brutenow = 0x00;
@@ -41,12 +44,18 @@ void mk312_write (uint16_t address, byte* payload, size_t length)
   {
     c[i] = c[i] ^ key;
   }
-  while (Serial2.available())
+
+  if (xSemaphoreTake(semaphore_serial2, portMAX_DELAY) == pdTRUE)
   {
-    Serial2.read();
+    while (Serial2.available())
+    {
+      Serial2.read();
+    }
+    Serial2.write(c, length + 4);
+    Serial2.readBytes(c, 1);
+    xSemaphoreGive(semaphore_serial2);
   }
-  Serial2.write(c, length + 4);
-  Serial2.readBytes(c, 1);
+
   if (c[0] != 0x06)
   {
     Serial.printf("error: received wrong write reply, got %02x\n", c[0]);
@@ -81,13 +90,16 @@ char mk312_read (uint16_t address)
     c[i] = c[i] ^ key;
   }
 
-  while (Serial2.available())
+  if (xSemaphoreTake(semaphore_serial2, portMAX_DELAY) == pdTRUE)
   {
-    Serial2.read();
+    while (Serial2.available())
+    {
+      Serial2.read();
+    }
+    Serial2.write(c, 4);
+    Serial2.readBytes(c, 3);
+    xSemaphoreGive(semaphore_serial2);
   }
-  Serial2.write(c, 4);
-  Serial2.readBytes(c, 3);
-
   sum = c[0] + c[1];
 
   if (sum != c[2])
@@ -121,6 +133,7 @@ void mk312_sync() {
     }
     Serial2.write(&c, 1);
     count = Serial2.readBytes(&c, 1);
+
     if (count > 0)
     {
       break;
@@ -133,12 +146,7 @@ void mk312_sync() {
   }
   if (c != 0x07)
   {
-    Serial.println("error: mk312 sync wrong reply, trying default key");
-    if (key != 0x55)
-    {
-      key = 0x55; //only works with modified firmware that allways uses 00. resulting key is 00^00^55
-      mk312_sync();
-    }
+    Serial.println("error: mk312 sync wrong reply");
   }
 }
 
@@ -284,48 +292,66 @@ void init_mk312_easy()
   int retry_count = 11;
   Serial2.begin(19200);
   Serial2.setTimeout(500);
+  semaphore_serial2 = xSemaphoreCreateBinary();
+  xSemaphoreGive(semaphore_serial2);
 
-  while (Serial2.available()) //flush
-  {
-    Serial2.read();
-  }
+
   Serial.write("mk312_init_easy first");
-  for (i = 0; i < retry_count; i++)
+  if (xSemaphoreTake(semaphore_serial2, portMAX_DELAY) == pdTRUE)
   {
-    Serial2.write(0x00);
-    Serial.write('.');
-    Serial2.readBytes(buffer, 1);
-    if (buffer[0] == 0x07)
+    while (Serial2.available()) //flush
     {
-      break;
+      Serial2.read();
     }
-  }
-  while (Serial2.available()) //flush
-  {
-    Serial2.read();
+    for (i = 0; i < retry_count; i++)
+    {
+      Serial2.write(0x00);
+      Serial.write('.');
+      Serial2.readBytes(buffer, 1);
+
+      if (buffer[0] == 0x07)
+      {
+        break;
+      }
+    }
+    xSemaphoreGive(semaphore_serial2);
   }
   buffer[0] = 0x2f;
   buffer[1] = 0x00;
   buffer[2] = 0x2f;
-  Serial2.write(buffer, 3);
-  Serial2.readBytes(buffer, 3);
-  Serial.printf("got %02x%02x%02x\n", buffer[0], buffer[1], buffer[2]);
 
-  while (Serial2.available()) //flush
+  if (xSemaphoreTake(semaphore_serial2, portMAX_DELAY) == pdTRUE)
   {
-    Serial2.read();
-  }
-  Serial.write("mk312_init_easy second");
-  for (i = 0; i < retry_count; i++)
-  {
-    Serial2.write(0x55);
-    Serial.write('.');
-    Serial2.readBytes(buffer, 1);
-    if (buffer[0] == 0x07)
+    while (Serial2.available()) //flush
     {
-      break;
+      Serial2.read();
     }
+    Serial2.write(buffer, 3);
+    Serial2.readBytes(buffer, 3);
+    xSemaphoreGive(semaphore_serial2);
   }
+  Serial.printf("got %02x%02x%02x\n", buffer[0], buffer[1], buffer[2]);
+  Serial.write("mk312_init_easy second");
+
+  if (xSemaphoreTake(semaphore_serial2, portMAX_DELAY) == pdTRUE)
+  {
+    while (Serial2.available()) //flush
+    {
+      Serial2.read();
+    }
+    for (i = 0; i < retry_count; i++)
+    {
+      Serial2.write(0x55);
+      Serial.write('.');
+      Serial2.readBytes(buffer, 1);
+      if (buffer[0] == 0x07)
+      {
+        break;
+      }
+    }
+    xSemaphoreGive(semaphore_serial2);
+  }
+
   if (i >= retry_count)
   {
     Serial.println("sync error");
