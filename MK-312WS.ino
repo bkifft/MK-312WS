@@ -7,7 +7,6 @@
 #include <ESPmDNS.h>
 #include <Preferences.h>
 #include <AsyncElegantOTA.h>
-#include <RingBuf.h>
 #include <BluetoothSerial.h>
 
 
@@ -34,8 +33,8 @@ String password;
 String hostname;
 String preferences_namespace;
 
-RingBuf<byte, 4096> debug_buffer;
-char debug_out[4097];
+
+char log_out[LOG_SIZE + 1];
 
 
 JSONVar values;
@@ -218,9 +217,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
         break;
         
     }
-      
 
-    // dutyCycle1 = map(sliderValue1.toInt(), 0, 100, 0, 255);
     values["battery"] = mk312_get_battery_level();
     json_string = JSON.stringify(values);
     ws.textAll(json_string);
@@ -253,8 +250,8 @@ void init_ws()
 
 
 void setup() {
-//  Serial.begin(115200);
-//  pinMode(LED_BUILTIN, OUTPUT);
+  Serial.end();
+  pinMode(LED_BUILTIN, OUTPUT);
   init_fs();
   init_preferences();
   init_wifi();
@@ -284,11 +281,7 @@ void setup() {
 
   server.on("/debug", HTTP_GET, [](AsyncWebServerRequest * request)
   {
-    for (int i = 0; i < debug_buffer.size(); i++)
-    {
-      debug_out[i] = debug_buffer[i];
-    }
-    debug_out[debug_buffer.size()] = '\0';
+    dump_log(&debug_out, LOG_SIZE);
     request->send(200, "text/plain", debug_out);
   });
 
@@ -324,49 +317,8 @@ void setup() {
 }
 
 
-void free_buffer()
-{
-  byte d;
-  while (debug_buffer.pop(d))
-  {
-    if (d == '\n')
-    {
-      break;
-    }
-  }
-}
-
-void debug(char* msg)
-{
-  for (int i = 0; i < strlen(msg); i++)
-  {
-    if (!debug_buffer.push(msg[i]))
-    {
-      free_buffer();
-      free_buffer();
-      debug_buffer.push(msg[i]);
-    }
-  }
-  debug_buffer.push('\n');
-}
 void loop() {
- /* while (Serial.available())
-  {
-    //mk312_bruteforce_ramp();
 
-    byte c = Serial.read();
-    if (c == '\0')
-    {
-      c = '\1';
-    }
-    if (!debug_buffer.push(c))
-    {
-      free_buffer();
-      free_buffer();
-      debug_buffer.push(c);
-    }
-    debug_buffer.push('\n');
-  }*/
   ws.cleanupClients();
 
 }
