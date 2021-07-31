@@ -24,7 +24,7 @@ void mk312_write (uint16_t address, byte* payload, size_t length)
 {
   if (length > 8)
   {
-    Serial.println("error: mk312_write longer than eight bytes");
+    //serial.println("error: mk312_write longer than eight bytes");
     return;
   }
   byte c[16];
@@ -58,7 +58,7 @@ void mk312_write (uint16_t address, byte* payload, size_t length)
 
   if (c[0] != 0x06)
   {
-    Serial.printf("error: received wrong write reply, got %02x\n", c[0]);
+    //serial.printf("error: received wrong write reply, got %02x\n", c[0]);
   }
 
 }
@@ -104,12 +104,12 @@ char mk312_read (uint16_t address)
 
   if (sum != c[2])
   {
-    Serial.printf("error: wrong read checksum got %02x calc %02x\n", c[2], sum);
+    //serial.printf("error: wrong read checksum got %02x calc %02x\n", c[2], sum);
   }
 
   if (c[0] != 0x22)
   {
-    Serial.printf("error: wrong read reply got %02x\n", c[0]);
+    //serial.printf("error: wrong read reply got %02x\n", c[0]);
   }
 
   return c[1];
@@ -122,7 +122,7 @@ void mk312_sync() {
   byte c;
   size_t count;
 
-  Serial.printf("mk312 sync. key %02x\n", key);
+  //serial.printf("mk312 sync. key %02x\n", key);
   for (i = 0; i < retry_limit; i++)
   {
     c = 0x00 ^ key;
@@ -142,11 +142,11 @@ void mk312_sync() {
 
   if (i >= retry_limit)
   {
-    Serial.println("error: mk312 sync no reply");
+    //serial.println("error: mk312 sync no reply");
   }
   if (c != 0x07)
   {
-    Serial.println("error: mk312 sync wrong reply");
+    //serial.println("error: mk312 sync wrong reply");
   }
 }
 
@@ -209,7 +209,7 @@ void mk312_set_ma(int percent)
   ma_max = mk312_read(ADDRESS_MA_MAX_VALUE);
   ma_min = mk312_read(ADDRESS_MA_MIN_VALUE);
   value = map(percent, 0, 100, ma_max, ma_min);
-  Serial.printf("set_ma: max %02x min %02x val %02x", ma_max, ma_min, value);
+  //serial.printf("set_ma: max %02x min %02x val %02x", ma_max, ma_min, value);
   mk312_write(ADDRESS_LEVELMA, &value, 1);
 
 }
@@ -287,7 +287,7 @@ byte mk312_get_mode()
 
 void init_mk312_easy()
 {
-  int i;
+  int i = 0;
   byte buffer[16];
   int retry_count = 11;
   Serial2.begin(19200);
@@ -296,7 +296,7 @@ void init_mk312_easy()
   xSemaphoreGive(semaphore_serial2);
 
 
-  Serial.write("mk312_init_easy first");
+  //serial.write("mk312_init_easy first");
   if (xSemaphoreTake(semaphore_serial2, portMAX_DELAY) == pdTRUE)
   {
     while (Serial2.available()) //flush
@@ -306,7 +306,7 @@ void init_mk312_easy()
     for (i = 0; i < retry_count; i++)
     {
       Serial2.write(0x00);
-      Serial.write('.');
+      //serial.write('.');
       Serial2.readBytes(buffer, 1);
 
       if (buffer[0] == 0x07)
@@ -330,8 +330,8 @@ void init_mk312_easy()
     Serial2.readBytes(buffer, 3);
     xSemaphoreGive(semaphore_serial2);
   }
-  Serial.printf("got %02x%02x%02x\n", buffer[0], buffer[1], buffer[2]);
-  Serial.write("mk312_init_easy second");
+  //serial.printf("got %02x%02x%02x\n", buffer[0], buffer[1], buffer[2]);
+  //serial.write("mk312_init_easy second");
 
   if (xSemaphoreTake(semaphore_serial2, portMAX_DELAY) == pdTRUE)
   {
@@ -342,7 +342,7 @@ void init_mk312_easy()
     for (i = 0; i < retry_count; i++)
     {
       Serial2.write(0x55);
-      Serial.write('.');
+      //serial.write('.');
       Serial2.readBytes(buffer, 1);
       if (buffer[0] == 0x07)
       {
@@ -354,11 +354,11 @@ void init_mk312_easy()
 
   if (i >= retry_count)
   {
-    Serial.println("sync error");
+    //serial.println("sync error");
   }
   else
   {
-    Serial.println("hi");
+    //serial.print//ln("hi");
   }
   Serial2.setTimeout(500);
 
