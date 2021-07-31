@@ -8,6 +8,7 @@
 #include <Preferences.h>
 #include <AsyncElegantOTA.h>
 #include <BluetoothSerial.h>
+#include "logger.h"
 
 
 #include "mk312.h"
