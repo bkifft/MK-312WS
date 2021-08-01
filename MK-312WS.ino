@@ -7,7 +7,7 @@
 #include <ESPmDNS.h>
 #include <Preferences.h>
 #include <AsyncElegantOTA.h>
-#include <BluetoothSerial.h>
+//#include <BluetoothSerial.h>
 #include "logger.h"
 
 
@@ -27,6 +27,8 @@ const char* hex_table = "0123456789abcdef";
 
 AsyncWebServer server(80);
 AsyncWebSocket ws("/ws");
+AsyncWebSocket ws_bytes("/ws_bytes");
+
 
 Preferences preferences;
 String ssid;
@@ -46,11 +48,11 @@ void init_fs()
 {
   if (!SPIFFS.begin())
   {
-    //serial.println("error: fs");
+    log(String("error: fs"));
   }
   else
   {
-    //serial.println("fs running");
+    log(String("fs running"));
   }
 }
 
@@ -58,7 +60,7 @@ void init_preferences()
 {
   preferences_namespace = WiFi.macAddress();
   preferences_namespace.replace(":","");
-  //serial.println("loading preferences, namespace " + preferences_namespace);
+  log(String("loading preferences, namespace ") + preferences_namespace);
   if (!preferences.begin(preferences_namespace.c_str(),true))
   {
     //serial.println("error: preferences!");
@@ -72,10 +74,10 @@ void init_preferences()
     password = preferences.getString("password", default_password);
     hostname = preferences.getString("hostname", default_hostname);
     preferences.end();
-    //serial.println("preferences loaded");
+    log(String("preferences loaded"));
   }
-  //serial.println("ssid: " + ssid);
-  //serial.println("hostname: " + hostname);
+  log(String("ssid: ") + ssid);
+  log(String("hostname: ") + hostname);
 }
 
 String template_processor(const String& var)
@@ -90,26 +92,24 @@ void init_wifi()
   int count = 0;
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid.c_str(), password.c_str());
-  //serial.print("Connecting to WiFi ");
+  log(String("Connecting to WiFi "));
   while (++count < retry_limit && WiFi.status() != WL_CONNECTED)
   {
-    //serial.print('.');
+    log(String('.'));
     delay(1000);
   }
   //serial.println("");
   if (WiFi.status() == WL_CONNECTED)
   {
-    //serial.println("Connected to " + ssid);
-    //serial.print("IP address: ");
-    //serial.println(WiFi.localIP());
+    log(String("Connected to ") + ssid);
+    log(String("IP address: ") + WiFi.localIP());
   }
   else
   {
     WiFi.disconnect();
     WiFi.softAP(ssid.c_str(), default_password.c_str());
-    //serial.println("AP-Mode");
-    //serial.print("IP address: ");
-    //serial.println(WiFi.softAPIP());
+    log(String("AP-Mode"));
+    log(String("IP address: ") + WiFi.softAPIP());
   }
   /*use mdns for host name resolution*/
   if (!MDNS.begin(hostname.c_str()))
@@ -130,7 +130,17 @@ void update_knobs()
 
 }
 
-void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
+void handleWebSocketMessage_ws_bytes(void *arg, uint8_t *data, size_t len)
+{
+  AwsFrameInfo *info = (AwsFrameInfo*)arg; 
+
+  if (info->final && info->index == 0 && info->len == len && info->opcode == WS_TEXT)
+  {
+    
+  }
+
+}
+void handleWebSocketMessage_ws(void *arg, uint8_t *data, size_t len)
 {
   AwsFrameInfo *info = (AwsFrameInfo*)arg;
   int slider;
@@ -142,7 +152,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
     data[len] = 0;
     message = (char*)data;
     //serial.println(message);
-    debug(message);
+    log(String("ws-command: ") + String(message));
     char c[16];
 
     switch (message[0])
@@ -225,7 +235,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
   }
 }
 
-void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len) {
+void onEvent_ws(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len) {
   switch (type)
   {
     case WS_EVT_CONNECT:
@@ -235,7 +245,24 @@ void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType 
       //serial.printf("WebSocket client #%u disconnected\n", client->id());
       break;
     case WS_EVT_DATA:
-      handleWebSocketMessage(arg, data, len);
+      handleWebSocketMessage_ws(arg, data, len);
+      break;
+    case WS_EVT_PONG:
+    case WS_EVT_ERROR:
+      break;
+  }
+}
+void onEvent_ws_bytes(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len) {
+  switch (type)
+  {
+    case WS_EVT_CONNECT:
+      //serial.printf("WebSocket client #%u connected from %s\n", client->id(), client->remoteIP().toString().c_str());
+      break;
+    case WS_EVT_DISCONNECT:
+      //serial.printf("WebSocket client #%u disconnected\n", client->id());
+      break;
+    case WS_EVT_DATA:
+      handleWebSocketMessage_ws_bytes(arg, data, len);
       break;
     case WS_EVT_PONG:
     case WS_EVT_ERROR:
@@ -245,9 +272,11 @@ void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType 
 
 void init_ws()
 {
-  ws.onEvent(onEvent);
+  ws.onEvent(onEvent_ws);
   server.addHandler(&ws);
-}
+  ws_bytes.onEvent(onEvent_ws_bytes);
+server.addHandler(&ws_bytes);
+  }
 
 
 void setup() {
@@ -282,8 +311,8 @@ void setup() {
 
   server.on("/debug", HTTP_GET, [](AsyncWebServerRequest * request)
   {
-    dump_log(&debug_out, LOG_SIZE);
-    request->send(200, "text/plain", debug_out);
+    dump_log(log_out, LOG_SIZE);
+    request->send(200, "text/plain", log_out);
   });
 
   server.on("/config_post", HTTP_POST, [](AsyncWebServerRequest * request)
