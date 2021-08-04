@@ -59,7 +59,7 @@ Text GLabel 4950 3200 0    50   Input ~ 0
 RXD_3V3
 Text GLabel 4950 3300 0    50   Input ~ 0
 TXD_3V3
-Text GLabel 4950 2400 0    50   Input ~ 0
+Text GLabel 4950 2300 0    50   Input ~ 0
 STATE_3V3
 Text GLabel 6000 2400 2    50   Input ~ 0
 3V3
@@ -322,5 +322,5 @@ NoConn ~ 4950 4500
 NoConn ~ 4950 4600
 NoConn ~ 4950 4700
 NoConn ~ 4950 2500
-NoConn ~ 4950 2300
+NoConn ~ 4950 2400
 $EndSCHEMATC
