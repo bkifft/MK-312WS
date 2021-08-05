@@ -281,7 +281,7 @@ server.addHandler(&ws_bytes);
 
 void setup() {
   Serial.end();
-  pinMode(LED_BUILTIN, OUTPUT);
+  //pinMode(LED_BUILTIN, OUTPUT);
   init_fs();
   init_preferences();
   init_wifi();

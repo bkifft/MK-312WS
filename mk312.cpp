@@ -44,7 +44,7 @@ void mk312_write (uint16_t address, byte* payload, size_t length)
   {
     c[i] = c[i] ^ key;
   }
-
+leftover ="";
   if (xSemaphoreTake(semaphore_serial2, portMAX_DELAY) == pdTRUE)
   {
     while (Serial2.available())
@@ -56,13 +56,14 @@ void mk312_write (uint16_t address, byte* payload, size_t length)
       log(String("leftovers in write: ") + leftover);
     }
     Serial2.write(c, length + 4);
+    c[0] = '\0';
     Serial2.readBytes(c, 1);
     xSemaphoreGive(semaphore_serial2);
   }
 
   if (c[0] != 0x06)
   {
-    log(String("error: received wrong write reply, got ") + String(c[0]));
+    log(String("error: received wrong write reply, got ") + String(c[0],HEX));
   }
 
 }
@@ -93,31 +94,33 @@ char mk312_read (uint16_t address)
   {
     c[i] = c[i] ^ key;
   }
-
+  log(String("debug: read send: ")+String(c[0],HEX) + String(c[1],HEX) +String(c[2],HEX) + String(c[3],HEX));
+leftover = "";
   if (xSemaphoreTake(semaphore_serial2, portMAX_DELAY) == pdTRUE)
   {
     while (Serial2.available())
     {
-      leftover = leftover + String(Serial2.read());
+      leftover = leftover + String(Serial2.read(),HEX);
     }
     if (leftover.length() > 0)
     {
       log(String("leftovers in read: ") + leftover);
     }
     Serial2.write(c, 4);
+    memset(c, '\0', 3);
     Serial2.readBytes(c, 3);
     xSemaphoreGive(semaphore_serial2);
   }
   sum = c[0] + c[1];
-
+  log(String("debug: read read: ")+String(c[0],HEX) + String(c[1],HEX) +String(c[2],HEX) + String(sum,HEX));
   if (sum != c[2])
   {
-    //serial.printf("error: wrong read checksum got %02x calc %02x\n", c[2], sum);
+    log(String("error: wrong read checksum expected and got ")+String(sum,HEX)+String(c[2],HEX));
   }
 
   if (c[0] != 0x22)
   {
-    //serial.printf("error: wrong read reply got %02x\n", c[0]);
+       log(String("error: wrong read reply got ")+String(c[0],HEX));
   }
 
   return c[1];
@@ -154,11 +157,11 @@ void mk312_sync() {
 
   if (i >= retry_limit)
   {
-    //serial.println("error: mk312 sync no reply");
+    log(String("error: mk312 sync no reply"));
   }
   if (c != 0x07)
   {
-    //serial.println("error: mk312 sync wrong reply");
+    log(String("error: mk312 sync wrong reply"));
   }
 }
 
