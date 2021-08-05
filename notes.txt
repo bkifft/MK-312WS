@@ -1,3 +1,6 @@
 - using d1 mini esp32. might need to change gpio on different platforms.
 - many esp32 boards are not 5V tolerant
 - bt overrules webserver?
+
+"Warning: Could not auto-detect Flash size (FlashID=0xffffff, SizeID=0xff), defaulting to 4MB"
+-> module faulty, flashchip. check gpio  pins 6,7,8,9,10 & 11. 

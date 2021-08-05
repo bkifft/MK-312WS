@@ -59,9 +59,9 @@ void init_fs()
 void init_preferences()
 {
   preferences_namespace = WiFi.macAddress();
-  preferences_namespace.replace(":","");
+  preferences_namespace.replace(":", "");
   log(String("loading preferences, namespace ") + preferences_namespace);
-  if (!preferences.begin(preferences_namespace.c_str(),true))
+  if (!preferences.begin(preferences_namespace.c_str(), true))
   {
     //serial.println("error: preferences!");
     ssid = default_ssid;
@@ -132,11 +132,11 @@ void update_knobs()
 
 void handleWebSocketMessage_ws_bytes(void *arg, uint8_t *data, size_t len)
 {
-  AwsFrameInfo *info = (AwsFrameInfo*)arg; 
+  AwsFrameInfo *info = (AwsFrameInfo*)arg;
 
   if (info->final && info->index == 0 && info->len == len && info->opcode == WS_TEXT)
   {
-    
+
   }
 
 }
@@ -161,12 +161,12 @@ void handleWebSocketMessage_ws(void *arg, uint8_t *data, size_t len)
         switch (message[5])
         {
           case 'l':
-       //     values["ramp_level"] = mk312_get_ramp_level();
+            //     values["ramp_level"] = mk312_get_ramp_level();
 
             break;
 
           case 't':
-         //   values["ramp_time"] = mk312_get_ramp_time();
+            //   values["ramp_time"] = mk312_get_ramp_time();
 
             break;
           case 's':
@@ -223,10 +223,10 @@ void handleWebSocketMessage_ws(void *arg, uint8_t *data, size_t len)
         update_knobs();
         break;
 
-        case 'b'://bytes
-        
+      case 'b'://bytes
+
         break;
-        
+
     }
 
     values["battery"] = mk312_get_battery_level();
@@ -275,13 +275,13 @@ void init_ws()
   ws.onEvent(onEvent_ws);
   server.addHandler(&ws);
   ws_bytes.onEvent(onEvent_ws_bytes);
-server.addHandler(&ws_bytes);
-  }
+  server.addHandler(&ws_bytes);
+}
 
 
 void setup() {
   Serial.end();
-  //pinMode(LED_BUILTIN, OUTPUT);
+  pinMode(0, OUTPUT);
   init_fs();
   init_preferences();
   init_wifi();
@@ -343,7 +343,7 @@ void setup() {
   server.serveStatic("/", SPIFFS, "/");
   AsyncElegantOTA.begin(&server, ssid.c_str(), password.c_str());
   server.begin();
-
+  digitalWrite(0, HIGH);
 }
 
 

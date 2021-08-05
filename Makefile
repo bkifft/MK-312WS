@@ -10,8 +10,18 @@ PARTITION_TABLE=~/.arduino15/packages/esp32/hardware/esp32/1.0.6/tools/partition
 
 DEVICE :=/dev/ttyUSB0
 
+.PHONY: factory
+factory: | erase_flash flash flash-fs
+
+.PHONY: erase_flash
+erase_flash:
+	python ~/.arduino15/packages/esp32/tools/esptool_py/3.0.0/esptool.py --chip esp32 \
+	  --port ${DEVICE} \
+	  --baud 460800 \
+	erase_flash
+
 .PHONY: build
-build:
+build: filesystem.bin
 	$(ARDUINO_CLI) compile -e -v --fqbn $(boardconfig) $(sketch)
 
 .PHONY: flash
@@ -36,7 +46,7 @@ filesystem.bin:
 
 .PHONY: flash-fs
 .ONESHELL:
-flash-fs: filesystem.bin
+flash-fs:
 	BUILD_SPIFFS_START_HEX=$$(cat ${PARTITION_TABLE} | grep "^spiffs"|cut -d, -f4 | xargs)
 	python ~/.arduino15/packages/esp32/tools/esptool_py/3.0.0/esptool.py --chip esp32 \
 	  --port ${DEVICE} \
