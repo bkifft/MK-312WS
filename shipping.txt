@@ -1,16 +1,14 @@
 No promises, but as I intend to send a few out I might as well offer it to everyone.
 Just bear in mind that this isn't a commercial offer, but a by the community for the community kinda deal.
 As such I don't have any stock and will build on request in my spare time only.
-Also shipping is expensive as fuck. 
+Also shipping is expensive as fuck. I will use your ready to print shipping label from Germany, if you want to cover the shipping fees on your own.
 
 Product cost:
-Naked PCB: 1€
-Poppulated PCB: 2€
-Complete module: 10€
+Naked carrier PCB: 1€
+Poppulated carrier PCB: 2€
+Complete module (carrier and ESP32): 10€
 
 Shipping including tracking:
 Germany: 7€ (insurance value 500€)
 European Union: 8,50€ (insurance value 50€)
 Rest of World: 14€ (insurance value 50€)
-
-
