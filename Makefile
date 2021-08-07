@@ -11,7 +11,7 @@ PARTITION_TABLE=~/.arduino15/packages/esp32/hardware/esp32/1.0.6/tools/partition
 DEVICE :=/dev/ttyUSB0
 
 .PHONY: factory
-factory: | erase_flash flash flash-fs
+factory: | erase_flash flash-fs flash
 
 .PHONY: erase_flash
 erase_flash:

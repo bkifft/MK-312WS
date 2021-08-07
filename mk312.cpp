@@ -9,7 +9,7 @@ SemaphoreHandle_t  semaphore_serial2;
 byte key = 0x55;
 const int retry_limit = 11;
 String leftover;
-
+const int timeout = 250;
 
 /*
    0xGd 0xHH 0xII [0xJJ 0xKK...] 0xCC
@@ -336,7 +336,7 @@ void init_mk312_easy()
   byte buffer[16];
   int retry_count = 11;
   Serial2.begin(19200);
-  Serial2.setTimeout(500);
+  Serial2.setTimeout(timeout);
   semaphore_serial2 = xSemaphoreCreateBinary();
   xSemaphoreGive(semaphore_serial2);
 
@@ -417,6 +417,6 @@ void init_mk312_easy()
   {
     //serial.print//ln("hi");
   }
-  Serial2.setTimeout(500);
+  Serial2.setTimeout(timeout);
 
 }
