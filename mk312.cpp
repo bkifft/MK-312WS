@@ -9,7 +9,7 @@ SemaphoreHandle_t  semaphore_serial2;
 byte key = 0x55;
 const int retry_limit = 11;
 String leftover;
-
+const int timeout = 250;
 
 /*
    0xGd 0xHH 0xII [0xJJ 0xKK...] 0xCC
@@ -20,12 +20,13 @@ String leftover;
   [0xJJ 0xKK]... - Value(s) to set address to
   0xCC - Checksum
 */
-void mk312_write (uint16_t address, byte* payload, size_t length)
+
+bool mk312_write_single (uint16_t address, byte* payload, size_t length)
 {
   if (length > 8)
   {
-    //serial.println("error: mk312_write longer than eight bytes");
-    return;
+    log(String("error: mk312_write longer than eight bytes"));
+    return false;
   }
   byte c[16];
   byte sum;
@@ -65,8 +66,21 @@ leftover ="";
   {
     log(String("error: received wrong write reply, got ") + String(c[0],HEX));
   }
-
+return 1;
 }
+
+void mk312_write (uint16_t address, byte* payload, size_t length)
+{
+  for (int i = 0; i< retry_limit; i++)
+  {
+    if (mk312_write_single(address, payload, length))
+    {
+      return;
+    }
+  }
+}
+
+
 /*
   0x3c 0xGG 0xHH 0xCC
   0xHH - High byte of address
@@ -79,7 +93,7 @@ leftover ="";
   0xCC - Checksum
 
 */
-char mk312_read (uint16_t address)
+bool mk312_read_single (uint16_t address, byte* retval)
 {
   byte c[4];
   byte sum;
@@ -94,7 +108,7 @@ char mk312_read (uint16_t address)
   {
     c[i] = c[i] ^ key;
   }
-  log(String("debug: read send: ")+String(c[0],HEX) + String(c[1],HEX) +String(c[2],HEX) + String(c[3],HEX));
+ // log(String("debug: read send: ")+String(c[0],HEX) + String(c[1],HEX) +String(c[2],HEX) + String(c[3],HEX));
 leftover = "";
   if (xSemaphoreTake(semaphore_serial2, portMAX_DELAY) == pdTRUE)
   {
@@ -112,19 +126,35 @@ leftover = "";
     xSemaphoreGive(semaphore_serial2);
   }
   sum = c[0] + c[1];
-  log(String("debug: read read: ")+String(c[0],HEX) + String(c[1],HEX) +String(c[2],HEX) + String(sum,HEX));
+ // log(String("debug: read read: ")+String(c[0],HEX) + String(c[1],HEX) +String(c[2],HEX) + String(sum,HEX));
   if (sum != c[2])
   {
     log(String("error: wrong read checksum expected and got ")+String(sum,HEX)+String(c[2],HEX));
-  }
+    return false;
+   }
 
   if (c[0] != 0x22)
   {
        log(String("error: wrong read reply got ")+String(c[0],HEX));
+       return false;
   }
 
-  return c[1];
+ *retval = c[1];
+return true;
+}
 
+
+byte mk312_read (uint16_t address)
+{
+  byte retval = 0;
+  for (int i = 0; i< retry_limit; i++)
+  {
+    if (mk312_read_single(address, &retval))
+    {
+      return retval;
+    }
+  }
+  return retval;
 }
 
 //write 0x00 untill reading 0x07. must happen no later than 11 bytes
@@ -306,7 +336,7 @@ void init_mk312_easy()
   byte buffer[16];
   int retry_count = 11;
   Serial2.begin(19200);
-  Serial2.setTimeout(500);
+  Serial2.setTimeout(timeout);
   semaphore_serial2 = xSemaphoreCreateBinary();
   xSemaphoreGive(semaphore_serial2);
 
@@ -387,6 +417,6 @@ void init_mk312_easy()
   {
     //serial.print//ln("hi");
   }
-  Serial2.setTimeout(500);
+  Serial2.setTimeout(timeout);
 
 }

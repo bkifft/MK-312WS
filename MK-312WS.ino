@@ -282,6 +282,7 @@ void init_ws()
 void setup() {
   Serial.end();
   pinMode(0, OUTPUT);
+  pinMode(2, OUTPUT);
   init_fs();
   init_preferences();
   init_wifi();
@@ -344,6 +345,7 @@ void setup() {
   AsyncElegantOTA.begin(&server, ssid.c_str(), password.c_str());
   server.begin();
   digitalWrite(0, HIGH);
+  digitalWrite(2, HIGH);
 }
 
 
