@@ -8,7 +8,7 @@ You can reach me on Discord bkifft#4189 or by e-mail pcb@bkifft.com.
 Product cost:
 Naked carrier PCB: 1€
 Poppulated carrier PCB: 2€
-Complete module (carrier and ESP32): 10€
+Complete module (carrier and ESP32): 13€
 
 Shipping including tracking:
 Germany: 7€ (insurance value 500€)
