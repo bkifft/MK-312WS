@@ -2,6 +2,7 @@
 #include <HardwareSerial.h>
 #include "logger.h"
 #include "mk312.h"
+#include <esp_task_wdt.h>
 
 
 
@@ -45,7 +46,7 @@ bool mk312_write_single (uint16_t address, byte* payload, size_t length)
   {
     c[i] = c[i] ^ key;
   }
-leftover ="";
+  leftover = "";
   if (xSemaphoreTake(semaphore_serial2, portMAX_DELAY) == pdTRUE)
   {
     while (Serial2.available())
@@ -64,15 +65,16 @@ leftover ="";
 
   if (c[0] != 0x06)
   {
-    log(String("error: received wrong write reply, got ") + String(c[0],HEX));
+    log(String("error: received wrong write reply, got ") + String(c[0], HEX));
   }
-return 1;
+  return 1;
 }
 
 void mk312_write (uint16_t address, byte* payload, size_t length)
 {
-  for (int i = 0; i< retry_limit; i++)
+  for (int i = 0; i < retry_limit; i++)
   {
+    esp_task_wdt_reset();
     if (mk312_write_single(address, payload, length))
     {
       return;
@@ -108,13 +110,13 @@ bool mk312_read_single (uint16_t address, byte* retval)
   {
     c[i] = c[i] ^ key;
   }
- // log(String("debug: read send: ")+String(c[0],HEX) + String(c[1],HEX) +String(c[2],HEX) + String(c[3],HEX));
-leftover = "";
+  // log(String("debug: read send: ")+String(c[0],HEX) + String(c[1],HEX) +String(c[2],HEX) + String(c[3],HEX));
+  leftover = "";
   if (xSemaphoreTake(semaphore_serial2, portMAX_DELAY) == pdTRUE)
   {
     while (Serial2.available())
     {
-      leftover = leftover + String(Serial2.read(),HEX);
+      leftover = leftover + String(Serial2.read(), HEX);
     }
     if (leftover.length() > 0)
     {
@@ -126,29 +128,30 @@ leftover = "";
     xSemaphoreGive(semaphore_serial2);
   }
   sum = c[0] + c[1];
- // log(String("debug: read read: ")+String(c[0],HEX) + String(c[1],HEX) +String(c[2],HEX) + String(sum,HEX));
+  // log(String("debug: read read: ")+String(c[0],HEX) + String(c[1],HEX) +String(c[2],HEX) + String(sum,HEX));
   if (sum != c[2])
   {
-    log(String("error: wrong read checksum expected and got ")+String(sum,HEX)+String(c[2],HEX));
+    log(String("error: wrong read checksum expected and got ") + String(sum, HEX) + String(c[2], HEX));
     return false;
-   }
+  }
 
   if (c[0] != 0x22)
   {
-       log(String("error: wrong read reply got ")+String(c[0],HEX));
-       return false;
+    log(String("error: wrong read reply got ") + String(c[0], HEX));
+    return false;
   }
 
- *retval = c[1];
-return true;
+  *retval = c[1];
+  return true;
 }
 
 
 byte mk312_read (uint16_t address)
 {
   byte retval = 0;
-  for (int i = 0; i< retry_limit; i++)
+  for (int i = 0; i < retry_limit; i++)
   {
+    esp_task_wdt_reset();
     if (mk312_read_single(address, &retval))
     {
       return retval;

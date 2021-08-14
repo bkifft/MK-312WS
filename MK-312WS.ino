@@ -37,7 +37,7 @@ String hostname;
 String preferences_namespace;
 
 
-char log_out[LOG_SIZE + 1];
+char log_out[LOG_SIZE + 1] = {'\0'};
 
 
 JSONVar values;
@@ -83,6 +83,7 @@ void init_preferences()
 String template_processor(const String& var)
 {
   if (var == "HOSTNAME")
+  Serial.println("HOSTNAME IS "+ hostname);
     return hostname;
   return String();
 }
@@ -102,14 +103,14 @@ void init_wifi()
   if (WiFi.status() == WL_CONNECTED)
   {
     log(String("Connected to ") + ssid);
-    log(String("IP address: ") + WiFi.localIP());
+    log(String("IP address: ") + WiFi.localIP().toString());
   }
   else
   {
     WiFi.disconnect();
     WiFi.softAP(ssid.c_str(), default_password.c_str());
     log(String("AP-Mode"));
-    log(String("IP address: ") + WiFi.softAPIP());
+    log(String("IP address: ") + WiFi.softAPIP().toString());
   }
   /*use mdns for host name resolution*/
   if (!MDNS.begin(hostname.c_str()))
@@ -280,9 +281,10 @@ void init_ws()
 
 
 void setup() {
-  Serial.end();
+  Serial.begin(115200);
   pinMode(0, OUTPUT);
   pinMode(2, OUTPUT);
+  init_logger();
   init_fs();
   init_preferences();
   init_wifi();
@@ -312,7 +314,6 @@ void setup() {
 
   server.on("/debug", HTTP_GET, [](AsyncWebServerRequest * request)
   {
-    dump_log(log_out, LOG_SIZE);
     request->send(200, "text/plain", log_out);
   });
 
@@ -350,7 +351,6 @@ void setup() {
 
 
 void loop() {
-
   ws.cleanupClients();
-
+    dump_log((byte*)log_out, LOG_SIZE);
 }

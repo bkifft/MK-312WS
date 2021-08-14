@@ -1,47 +1,61 @@
-#include <RingBuf.h>
 #include <Arduino.h>
 #include "logger.h"
+#include <esp_task_wdt.h>
 
-RingBuf<byte, LOG_SIZE> log_buffer;
-
-
-void free_log_buffer()
-{
-  byte d;
-  while (log_buffer.pop(d))
-  {
-    if (d == '\n')
-    {
-      break;
-    }
-  }
-}
+byte log_array[LOG_SIZE + 1] = {'.'};
+int log_insertion_index = 0;
+bool log_new = false;
+SemaphoreHandle_t  semaphore_logger;
 
 void log(String msg)
 {
-  for (int i = 0; i < msg.length(); i++)
+//  Serial.printf("logging: %s\n", msg.c_str());
+  if (xSemaphoreTake(semaphore_logger, portMAX_DELAY) == pdTRUE)
   {
-    if (!log_buffer.push(msg[i]))
+    for (int i = 0; i < msg.length(); i++)
     {
-      free_log_buffer();
-      free_log_buffer();
-      log_buffer.push(msg[i]);
+      log_array[log_insertion_index] = msg[i];
+      log_insertion_index = (log_insertion_index + 1) % LOG_SIZE;
     }
+    log_array[log_insertion_index] = '\n';
+    log_insertion_index = (log_insertion_index + 1) % LOG_SIZE;
+    log_new = true;
+    xSemaphoreGive(semaphore_logger);
   }
-  log_buffer.push('\n');
 }
 
-int dump_log(char* buffer, int buffer_size)
+void dump_log(byte * buffer_pointer, size_t buffer_size)
 {
-  int i = 0;
-  int ring_size = log_buffer.size();
-  int limit = min(ring_size,buffer_size);
-   for (i = 0; i < limit; i++)
-    {
-      buffer[i] = log_buffer[i];
-    }
-    buffer[limit - 1] = '\0';
+  if (!log_new)
+  {
+    return;
+  }
+ /* if (buffer_size < LOG_SIZE)
+  {
+    memset(buffer_pointer, '\0', buffer_size);
+    return;
+  }*/
+  Serial.printf("dumping:\n");
 
-  return limit;
-  
+  if (xSemaphoreTake(semaphore_logger, portMAX_DELAY) == pdTRUE)
+  {
+    // memcpy(dest src len);
+    buffer_pointer[buffer_size -1] = '\0';
+    memcpy(buffer_pointer, log_array + log_insertion_index, LOG_SIZE - log_insertion_index);
+    esp_task_wdt_reset();
+    Serial.printf("logdump a: %s\n", buffer_pointer);
+    memcpy(buffer_pointer + log_insertion_index, log_array, log_insertion_index);
+    Serial.printf("logdump b: %s\n", buffer_pointer + log_insertion_index);
+    esp_task_wdt_reset();
+    log_new = false;
+    xSemaphoreGive(semaphore_logger);
+  }
+}
+
+void init_logger()
+{
+  semaphore_logger = xSemaphoreCreateBinary();
+  xSemaphoreGive(semaphore_logger);
+  log_new = false;
+
 }

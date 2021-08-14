@@ -2,10 +2,10 @@
 #define LOGGER_H
 #pragma once
 
-#define LOG_SIZE 2048
+#define LOG_SIZE 400
 
 void log(String msg);
-int dump_log(char* buffer, int buffer_size);
-
+void dump_log(byte* buffer_pointer, size_t buffer_size);
+void init_logger();
 
 #endif //LOGGER_H
