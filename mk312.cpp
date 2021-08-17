@@ -8,7 +8,7 @@
 
 SemaphoreHandle_t  semaphore_serial2;
 byte key = 0x55;
-const int retry_limit = 11;
+const int retry_limit = 4;
 String leftover;
 const int timeout = 250;
 
@@ -47,7 +47,7 @@ bool mk312_write_single (uint16_t address, byte* payload, size_t length)
     c[i] = c[i] ^ key;
   }
   leftover = "";
-  if (xSemaphoreTake(semaphore_serial2, portMAX_DELAY) == pdTRUE)
+  if (xSemaphoreTake(semaphore_serial2,  portTICK_PERIOD_MS * 2 * timeout) == pdTRUE)
   {
     while (Serial2.available())
     {
@@ -62,12 +62,18 @@ bool mk312_write_single (uint16_t address, byte* payload, size_t length)
     Serial2.readBytes(c, 1);
     xSemaphoreGive(semaphore_serial2);
   }
+  else
+  {
+    log(String("error: write didn't get semaphore"));
+    return false;
+  }
 
   if (c[0] != 0x06)
   {
     log(String("error: received wrong write reply, got ") + String(c[0], HEX));
+    return false;
   }
-  return 1;
+  return true;
 }
 
 void mk312_write (uint16_t address, byte* payload, size_t length)
@@ -112,7 +118,7 @@ bool mk312_read_single (uint16_t address, byte* retval)
   }
   // log(String("debug: read send: ")+String(c[0],HEX) + String(c[1],HEX) +String(c[2],HEX) + String(c[3],HEX));
   leftover = "";
-  if (xSemaphoreTake(semaphore_serial2, portMAX_DELAY) == pdTRUE)
+  if (xSemaphoreTake(semaphore_serial2, portTICK_PERIOD_MS * 2 * timeout) == pdTRUE)
   {
     while (Serial2.available())
     {
@@ -167,25 +173,28 @@ void mk312_sync() {
   size_t count;
 
   //serial.printf("mk312 sync. key %02x\n", key);
-  for (i = 0; i < retry_limit; i++)
+  for (i = 0; i < 11; i++)
   {
     c = 0x00 ^ key;
-
-    while (Serial2.available())
+    if (xSemaphoreTake(semaphore_serial2, portTICK_PERIOD_MS * 2 * timeout) == pdTRUE)
     {
-      leftover = leftover + String(Serial2.read());
+      while (Serial2.available())
+      {
+        leftover = leftover + String(Serial2.read());
+      }
+      if (leftover.length() > 0)
+      {
+        log(String("leftovers in sync: ") + leftover);
+      }
+      Serial2.write(&c, 1);
+      count = Serial2.readBytes(&c, 1);
+      xSemaphoreGive(semaphore_serial2);
     }
-    if (leftover.length() > 0)
-    {
-      log(String("leftovers in sync: ") + leftover);
-    }
-    Serial2.write(&c, 1);
-    count = Serial2.readBytes(&c, 1);
-
     if (count > 0)
     {
       break;
     }
+
   }
 
   if (i >= retry_limit)

@@ -19,7 +19,6 @@ const String default_hostname = "MK-312WS";
 const String default_ssid = WiFi.macAddress();
 const String default_password = "12345678"; //needs to be at least 8 chars long for AP mode
 const int retry_limit = 10;
-const int task_delay_ms = 500;
 
 /////////sgtop changing
 
@@ -61,9 +60,9 @@ void init_preferences()
   preferences_namespace = WiFi.macAddress();
   preferences_namespace.replace(":", "");
   log(String("loading preferences, namespace ") + preferences_namespace);
-  if (!preferences.begin(preferences_namespace.c_str(), true))
+  if (!preferences.begin(preferences_namespace.c_str()))
   {
-    //serial.println("error: preferences!");
+    log(String("error: preferences!"));
     ssid = default_ssid;
     password = default_password;
     hostname = default_hostname;
@@ -72,7 +71,7 @@ void init_preferences()
   {
     ssid = preferences.getString("ssid", default_ssid);
     password = preferences.getString("password", default_password);
-    hostname = preferences.getString("hostname", default_hostname);
+    hostname = default_hostname;//fixme preferences.getString("hostname", default_hostname);
     preferences.end();
     log(String("preferences loaded"));
   }
@@ -83,8 +82,9 @@ void init_preferences()
 String template_processor(const String& var)
 {
   if (var == "HOSTNAME")
-  Serial.println("HOSTNAME IS "+ hostname);
+  {
     return hostname;
+  }
   return String();
 }
 
@@ -319,14 +319,14 @@ void setup() {
 
   server.on("/config_post", HTTP_POST, [](AsyncWebServerRequest * request)
   {
-    if (request->hasParam("ssid", true) && request->getParam("ssid", true)->value() != "" ) ssid = request->getParam("ssid", true)->value();
-    if (request->hasParam("password", true) && request->getParam("password", true)->value() != "") password = request->getParam("password", true)->value();
-    if (request->hasParam("hostname", true) && request->getParam("hostname", true)->value() != "") hostname = request->getParam("hostname", true)->value();
+    if (request->hasParam("ssid", true)) ssid = request->getParam("ssid", true)->value();
+    if (request->hasParam("password", true)) password = request->getParam("password", true)->value();
+    if (request->hasParam("hostname", true)) hostname = request->getParam("hostname", true)->value();
 
-    //serial.println("ssid: " + ssid);
-    //serial.println("hostname: " + hostname);
+    Serial.println("ssid: " + ssid);
+    Serial.println("hostname: " + hostname);
 
-    preferences.begin(preferences_namespace.c_str(), false);
+    preferences.begin(preferences_namespace.c_str());
     preferences.putString("ssid", ssid);
     preferences.putString("password", password);
     preferences.putString("hostname", hostname);
