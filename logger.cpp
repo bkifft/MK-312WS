@@ -42,12 +42,14 @@ void dump_log(byte * buffer_pointer, size_t buffer_size)
     // memcpy(dest src len);
     buffer_pointer[buffer_size - 1] = '\0'; 
     memcpy(buffer_pointer, log_array + log_insertion_index, LOG_SIZE - log_insertion_index);
- //   esp_task_wdt_reset();
+    Serial.printf("logdump: memcpy 1: dest %p src %p len %d\n", buffer_pointer, log_array + log_insertion_index, LOG_SIZE - log_insertion_index);
+    esp_task_wdt_reset();
     Serial.printf("logdump a: %s\n", buffer_pointer);
     memcpy(buffer_pointer + log_insertion_index, log_array, log_insertion_index);
+    Serial.printf("logdump: memcpy 1: dest %p src %p len %d\n", buffer_pointer + log_insertion_index, log_array, log_insertion_index);
+
     Serial.printf("logdump b: %s\n", buffer_pointer + log_insertion_index);
-  //  esp_task_wdt_reset();
-    //  buffer_pointer[buffer_size] = '\0'; 
+    esp_task_wdt_reset();
     log_new = false;
     xSemaphoreGive(semaphore_logger);
   }

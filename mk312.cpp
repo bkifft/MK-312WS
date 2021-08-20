@@ -352,8 +352,6 @@ void init_mk312_easy()
   semaphore_serial2 = xSemaphoreCreateBinary();
   xSemaphoreGive(semaphore_serial2);
 
-
-  //serial.write("mk312_init_easy first");
   if (xSemaphoreTake(semaphore_serial2, portMAX_DELAY) == pdTRUE)
   {
     while (Serial2.available()) //flush
@@ -367,12 +365,15 @@ void init_mk312_easy()
     for (i = 0; i < retry_count; i++)
     {
       Serial2.write(0x00);
-      //serial.write('.');
       Serial2.readBytes(buffer, 1);
 
       if (buffer[0] == 0x07)
       {
         break;
+      }
+      else
+      {
+        log(String("easyinit: try") + String(i) + String(" got ") + String(buffer[0])); 
       }
     }
     xSemaphoreGive(semaphore_serial2);
@@ -395,9 +396,6 @@ void init_mk312_easy()
     Serial2.readBytes(buffer, 3);
     xSemaphoreGive(semaphore_serial2);
   }
-  //serial.printf("got %02x%02x%02x\n", buffer[0], buffer[1], buffer[2]);
-  log(String("mk312_init_easy second"));
-
   if (xSemaphoreTake(semaphore_serial2, portMAX_DELAY) == pdTRUE)
   {
     while (Serial2.available()) //flush
