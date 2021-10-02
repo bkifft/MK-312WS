@@ -9,6 +9,7 @@ SemaphoreHandle_t  semaphore_logger;
 
 void log(String msg)
 {
+  return;
   Serial.printf("logging: at %d %s\n",log_insertion_index,   msg.c_str());
   if (xSemaphoreTake(semaphore_logger, portMAX_DELAY) == pdTRUE)
   {
@@ -26,6 +27,7 @@ void log(String msg)
 
 void dump_log(byte * buffer_pointer, size_t buffer_size)
 {
+  return;
   if (!log_new)
   {
     return;
@@ -40,7 +42,6 @@ void dump_log(byte * buffer_pointer, size_t buffer_size)
   if (xSemaphoreTake(semaphore_logger, 0/*portMAX_DELAY*/) == pdTRUE)
   {
     // memcpy(dest src len);
-    buffer_pointer[buffer_size - 1] = '\0'; 
     memcpy(buffer_pointer, log_array + log_insertion_index, LOG_SIZE - log_insertion_index);
  //   esp_task_wdt_reset();
     Serial.printf("logdump a: %s\n", buffer_pointer);
@@ -48,6 +49,8 @@ void dump_log(byte * buffer_pointer, size_t buffer_size)
     Serial.printf("logdump b: %s\n", buffer_pointer + log_insertion_index);
   //  esp_task_wdt_reset();
     //  buffer_pointer[buffer_size] = '\0'; 
+        buffer_pointer[buffer_size - 1] = '\0'; 
+
     log_new = false;
     xSemaphoreGive(semaphore_logger);
   }
@@ -55,6 +58,7 @@ void dump_log(byte * buffer_pointer, size_t buffer_size)
 
 void init_logger()
 {
+  return;
   semaphore_logger = xSemaphoreCreateBinary();
   xSemaphoreGive(semaphore_logger);
   log_new = false;
