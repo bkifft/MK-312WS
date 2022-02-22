@@ -108,6 +108,7 @@ void init_wifi()
   else
   {
     WiFi.disconnect();
+    ssid=ssid.substring(0,30)+"MK"; //ssid is specced at max 32 characters. neded in case wrong pw to join existing wifi
     WiFi.softAP(ssid.c_str(), default_password.c_str());
     log(String("AP-Mode"));
     log(String("IP address: ") + WiFi.softAPIP().toString());
