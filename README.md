@@ -15,14 +15,14 @@ Planned features:
 
 Requirements:
 - ESP32 devboard. I recommend the "ESP32 mini", 2x2x10 pins. Like https://www.az-delivery.de/en/products/esp32-d1-mini, does get sold under different brands.
-- Levelshifter, 5V to 3.3V. Already part of the carrier board.
+- ~~Levelshifter, 5V to 3.3V. Already part of the carrier board.~~ Turns out levelshifting isn't needed, as there's already a voltage divider on the boxes TX line.
 - Arduino IDE with the ESP32 board package and the filesystem uploader (https://randomnerdtutorials.com/install-esp32-filesystem-uploader-arduino-ide/).
 
 
 Howto:
 - Flash the sketch.
 - Flash the filesystem.
-- Replace the BT module in the mk312. Remember to levelshift RX if you aren't using the carrier board.
+- Replace the BT module in the mk312. ~~Remember to levelshift RX if you aren't using the carrier board.~~
 - Connect to the new AP. SSID is the modules MAC address, pw is 12345678.
 - Open http://192.168.4.1/config. Change the SSID if you want to continue AP mode, SSID and password to connect to a preexisting network.
 WARNING: For now AP mode will always use the default password of 12345678, as there is no easy other way to change a forgotten password.
