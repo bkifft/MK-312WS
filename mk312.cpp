@@ -1,6 +1,5 @@
 #include <Arduino.h>
 #include <HardwareSerial.h>
-#include "logger.h"
 #include "mk312.h"
 #include <esp_task_wdt.h>
 
@@ -26,7 +25,7 @@ bool mk312_write_single (uint16_t address, byte* payload, size_t length)
 {
   if (length > 8)
   {
-    log(String("error: mk312_write longer than eight bytes"));
+    Serial.println("error: mk312_write longer than eight bytes");
     return false;
   }
   byte c[16];
@@ -51,11 +50,11 @@ bool mk312_write_single (uint16_t address, byte* payload, size_t length)
   {
     while (Serial2.available())
     {
-      leftover = leftover + String(Serial2.read());
+      leftover = leftover + String(Serial2.read(), HEX);
     }
     if (leftover.length() > 0)
     {
-      log(String("leftovers in write: ") + leftover);
+      Serial.println("leftovers in write: " + leftover);
     }
     Serial2.write(c, length + 4);
     c[0] = '\0';
@@ -64,13 +63,13 @@ bool mk312_write_single (uint16_t address, byte* payload, size_t length)
   }
   else
   {
-    log(String("error: write didn't get semaphore"));
+    Serial.println("error: write didn't get semaphore");
     return false;
   }
 
   if (c[0] != 0x06)
   {
-    log(String("error: received wrong write reply, got ") + String(c[0], HEX));
+    Serial.println("error: received wrong write reply, got " + String(c[0], HEX));
     return false;
   }
   return true;
@@ -85,6 +84,8 @@ void mk312_write (uint16_t address, byte* payload, size_t length)
     {
       return;
     }
+    Serial.println("error: failed mk312_write " + String(address, HEX) +"try " + i);
+    
   }
 }
 
@@ -116,7 +117,6 @@ bool mk312_read_single (uint16_t address, byte* retval)
   {
     c[i] = c[i] ^ key;
   }
-  // log(String("debug: read send: ")+String(c[0],HEX) + String(c[1],HEX) +String(c[2],HEX) + String(c[3],HEX));
   leftover = "";
   if (xSemaphoreTake(semaphore_serial2, portTICK_PERIOD_MS * 2 * timeout) == pdTRUE)
   {
@@ -126,7 +126,7 @@ bool mk312_read_single (uint16_t address, byte* retval)
     }
     if (leftover.length() > 0)
     {
-      log(String("leftovers in read: ") + leftover);
+      Serial.println("leftovers in read: " + leftover);
     }
     Serial2.write(c, 4);
     memset(c, '\0', 3);
@@ -134,16 +134,15 @@ bool mk312_read_single (uint16_t address, byte* retval)
     xSemaphoreGive(semaphore_serial2);
   }
   sum = c[0] + c[1];
-  // log(String("debug: read read: ")+String(c[0],HEX) + String(c[1],HEX) +String(c[2],HEX) + String(sum,HEX));
   if (sum != c[2])
   {
-    log(String("error: wrong read checksum expected and got ") + String(sum, HEX) + String(c[2], HEX));
+    Serial.println("error: wrong read checksum expected and got " + String(sum, HEX) + String(c[2], HEX));
     return false;
   }
 
   if (c[0] != 0x22)
   {
-    log(String("error: wrong read reply got ") + String(c[0], HEX));
+    Serial.println("error: wrong read reply got " + String(c[0], HEX));
     return false;
   }
 
@@ -162,17 +161,18 @@ byte mk312_read (uint16_t address)
     {
       return retval;
     }
+    Serial.println("error: failed mk312_read " + String(address, HEX) +"try " + i);
   }
   return retval;
 }
 
+/* deprecated for easyinit
 //write 0x00 untill reading 0x07. must happen no later than 11 bytes
 void mk312_sync() {
   int i;
   byte c;
   size_t count;
 
-  //serial.printf("mk312 sync. key %02x\n", key);
   for (i = 0; i < 11; i++)
   {
     c = 0x00 ^ key;
@@ -184,7 +184,7 @@ void mk312_sync() {
       }
       if (leftover.length() > 0)
       {
-        log(String("leftovers in sync: ") + leftover);
+        Serial.println("leftovers in sync: " + leftover);
       }
       Serial2.write(&c, 1);
       count = Serial2.readBytes(&c, 1);
@@ -199,13 +199,14 @@ void mk312_sync() {
 
   if (i >= retry_limit)
   {
-    log(String("error: mk312 sync no reply"));
+    Serial.println("error: mk312 sync no reply");
   }
   if (c != 0x07)
   {
-    log(String("error: mk312 sync wrong reply"));
+    Serial.println("error: mk312 sync wrong reply");
   }
 }
+*/
 
 void mk312_enable_adc()
 {
@@ -266,7 +267,7 @@ void mk312_set_ma(int percent)
   ma_max = mk312_read(ADDRESS_MA_MAX_VALUE);
   ma_min = mk312_read(ADDRESS_MA_MIN_VALUE);
   value = map(percent, 0, 100, ma_max, ma_min);
-  //serial.printf("set_ma: max %02x min %02x val %02x", ma_max, ma_min, value);
+  Serial.printf("set_ma: max %02x min %02x val %02x", ma_max, ma_min, value);
   mk312_write(ADDRESS_LEVELMA, &value, 1);
 
 }
@@ -342,15 +343,13 @@ byte mk312_get_mode()
   return mk312_read(ADDRESS_CURRENT_MODE);
 }
 
-void init_mk312_easy()
+
+void reinit_mk312_easy()
 {
   int i = 0;
   byte buffer[16];
   int retry_count = 11;
-  Serial2.begin(19200);
   Serial2.setTimeout(timeout);
-  semaphore_serial2 = xSemaphoreCreateBinary();
-  xSemaphoreGive(semaphore_serial2);
 
   if (xSemaphoreTake(semaphore_serial2, portMAX_DELAY) == pdTRUE)
   {
@@ -360,9 +359,10 @@ void init_mk312_easy()
     }
     if (leftover.length() > 0)
     {
-      log(String("leftovers in easyinit_1: ") + leftover);
+      Serial.println("leftovers in easyinit_1: " + leftover);
     }
-    for (i = 0; i < retry_count; i++)
+    
+    for (i = 0; i < retry_count; i++) //spam input untill device expecxts new command
     {
       Serial2.write(0x00);
       Serial2.readBytes(buffer, 1);
@@ -373,38 +373,33 @@ void init_mk312_easy()
       }
       else
       {
-        log(String("easyinit: try") + String(i) + String(" got ") + String(buffer[0])); 
+        Serial.println("easyinit: try" + String(i) + String(" got ") + String(buffer[0])); 
       }
     }
-    xSemaphoreGive(semaphore_serial2);
-  }
-  buffer[0] = 0x2f;
-  buffer[1] = 0x00;
-  buffer[2] = 0x2f;
 
-  if (xSemaphoreTake(semaphore_serial2, portMAX_DELAY) == pdTRUE)
-  {
+    //try to set host key to 0x00
+    buffer[0] = 0x2f;
+    buffer[1] = 0x00;
+    buffer[2] = 0x2f;
+
     while (Serial2.available()) //flush
     {
       leftover = leftover + String(Serial2.read());
     }
     if (leftover.length() > 0)
     {
-      log(String("leftovers in easyinit21: ") + leftover);
+     Serial.println("leftovers in easyinit21: " + leftover);
     }
     Serial2.write(buffer, 3);
-    Serial2.readBytes(buffer, 3);
-    xSemaphoreGive(semaphore_serial2);
-  }
-  if (xSemaphoreTake(semaphore_serial2, portMAX_DELAY) == pdTRUE)
-  {
+    Serial2.readBytes(buffer, 3); //dont realy care
+    
     while (Serial2.available()) //flush
     {
       leftover = leftover + String(Serial2.read());
     }
     if (leftover.length() > 0)
     {
-      log(String("leftovers in easyinit_3: ") + leftover);
+      Serial.println("leftovers in easyinit_3: " + leftover);
     }
     for (i = 0; i < retry_count; i++)
     {
@@ -421,12 +416,20 @@ void init_mk312_easy()
 
   if (i >= retry_count)
   {
-    //serial.println("sync error");
+    Serial.println("sync error");
   }
   else
   {
-    //serial.print//ln("hi");
+    Serial.println("synced");
   }
   Serial2.setTimeout(timeout);
 
+}
+
+void init_mk312_easy()
+{
+  Serial2.begin(19200);
+  semaphore_serial2 = xSemaphoreCreateBinary();
+  xSemaphoreGive(semaphore_serial2);
+  reinit_mk312_easy();  
 }

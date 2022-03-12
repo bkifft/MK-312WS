@@ -7,11 +7,9 @@
 #include <ESPmDNS.h>
 #include <Preferences.h>
 #include <AsyncElegantOTA.h>
-//#include <BluetoothSerial.h>
-#include "logger.h"
-
 
 #include "mk312.h"
+
 
 //////////change here
 
@@ -28,30 +26,24 @@ AsyncWebServer server(80);
 AsyncWebSocket ws("/ws");
 AsyncWebSocket ws_bytes("/ws_bytes");
 
-
 Preferences preferences;
 String ssid;
 String password;
 String hostname;
 String preferences_namespace;
 
-
-char log_out[LOG_SIZE + 1] = {'\0'};
-
-
 JSONVar values;
 String json_string;
-
 
 void init_fs()
 {
   if (!SPIFFS.begin())
   {
-    log(String("error: fs"));
+    Serial.println("error: fs");
   }
   else
   {
-    log(String("fs running"));
+    Serial.println("fs running");
   }
 }
 
@@ -59,10 +51,10 @@ void init_preferences()
 {
   preferences_namespace = WiFi.macAddress();
   preferences_namespace.replace(":", "");
-  log(String("loading preferences, namespace ") + preferences_namespace);
+  Serial.println("loading preferences, namespace " + preferences_namespace);
   if (!preferences.begin(preferences_namespace.c_str()))
   {
-    log(String("error: preferences!"));
+    Serial.println("error: preferences!");
     ssid = default_ssid;
     password = default_password;
     hostname = default_hostname;
@@ -73,10 +65,10 @@ void init_preferences()
     password = preferences.getString("password", default_password);
     hostname = default_hostname;//fixme preferences.getString("hostname", default_hostname);
     preferences.end();
-    log(String("preferences loaded"));
+    Serial.println("preferences loaded");
   }
-  log(String("ssid: ") + ssid);
-  log(String("hostname: ") + hostname);
+  Serial.println("ssid: " + ssid);
+  Serial.println("hostname: " + hostname);
 }
 
 String template_processor(const String& var)
@@ -93,34 +85,34 @@ void init_wifi()
   int count = 0;
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid.c_str(), password.c_str());
-  log(String("Connecting to WiFi "));
+  Serial.println("Connecting to WiFi ");
   while (++count < retry_limit && WiFi.status() != WL_CONNECTED)
   {
-    log(String('.'));
+    Serial.print('.');
     delay(1000);
   }
-  //serial.println("");
+  Serial.println("");
   if (WiFi.status() == WL_CONNECTED)
   {
-    log(String("Connected to ") + ssid);
-    log(String("IP address: ") + WiFi.localIP().toString());
+    Serial.println("Connected to " + ssid);
+    Serial.println("IP address: " + WiFi.localIP().toString());
   }
   else
   {
     WiFi.disconnect();
-    ssid=ssid.substring(0,30)+"MK"; //ssid is specced at max 32 characters. neded in case wrong pw to join existing wifi
+    ssid = ssid.substring(0, 30) + "MK"; //ssid is specced at max 32 characters. neded in case wrong pw to join existing wifi
     WiFi.softAP(ssid.c_str(), default_password.c_str());
-    log(String("AP-Mode"));
-    log(String("IP address: ") + WiFi.softAPIP().toString());
+    Serial.println("AP-Mode");
+    Serial.println("IP address: " + WiFi.softAPIP().toString());
   }
   /*use mdns for host name resolution*/
   if (!MDNS.begin(hostname.c_str()))
   {
-    //serial.println("error: mdns");
+    Serial.println("error: mdns");
   }
   else
   {
-    //serial.println("mdns running: " + hostname + ".local");
+    Serial.println("mdns running: " + hostname + ".local");
   }
 }
 
@@ -154,7 +146,7 @@ void handleWebSocketMessage_ws(void *arg, uint8_t *data, size_t len)
     data[len] = 0;
     message = (char*)data;
     //serial.println(message);
-    log(String("ws-command: ") + String(message));
+    Serial.println("ws-command: " + String(message));
     char c[16];
 
     switch (message[0])
@@ -285,7 +277,6 @@ void setup() {
   Serial.begin(115200);
   pinMode(0, OUTPUT);
   pinMode(2, OUTPUT);
-  init_logger();
   init_fs();
   init_preferences();
   init_wifi();
@@ -313,19 +304,14 @@ void setup() {
     request->send(SPIFFS, "/config.html", "text/html");
   });
 
-  server.on("/debug", HTTP_GET, [](AsyncWebServerRequest * request)
-  {
-    request->send(200, "text/plain", log_out);
-  });
-
   server.on("/config_post", HTTP_POST, [](AsyncWebServerRequest * request)
   {
     if (request->hasParam("ssid", true)) ssid = request->getParam("ssid", true)->value();
     if (request->hasParam("password", true)) password = request->getParam("password", true)->value();
     if (request->hasParam("hostname", true)) hostname = request->getParam("hostname", true)->value();
 
-    Serial.println("ssid: " + ssid);
-    Serial.println("hostname: " + hostname);
+    Serial.println("new ssid: " + ssid);
+    Serial.println("new hostname: " + hostname);
 
     preferences.begin(preferences_namespace.c_str());
     preferences.putString("ssid", ssid);
@@ -353,5 +339,4 @@ void setup() {
 
 void loop() {
   ws.cleanupClients();
-    dump_log((byte*)log_out, LOG_SIZE);
 }
