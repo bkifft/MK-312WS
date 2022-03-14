@@ -37,6 +37,8 @@ function update_button(element) {
     websocket.send(element.name);
 }
 
+
+
 function onMessage(event) 
 {
     console.log(event.data);

@@ -84,7 +84,7 @@ void mk312_write (uint16_t address, byte* payload, size_t length)
     {
       return;
     }
-    Serial.println("error: failed mk312_write " + String(address, HEX) +"try " + i);
+    Serial.println("error: failed mk312_write " + String(address, HEX) +" try " + i);
     
   }
 }
@@ -161,7 +161,7 @@ byte mk312_read (uint16_t address)
     {
       return retval;
     }
-    Serial.println("error: failed mk312_read " + String(address, HEX) +"try " + i);
+    Serial.println("error: failed mk312_read " + String(address, HEX) +" try " + i);
   }
   return retval;
 }
@@ -231,6 +231,12 @@ bool mk312_get_adc_disabled()
     return true;
   }
   return false;
+}
+
+void mk312_all_off()
+{
+  mk312_set_a(0);
+  mk312_set_b(0);
 }
 
 
@@ -432,4 +438,65 @@ void init_mk312_easy()
   semaphore_serial2 = xSemaphoreCreateBinary();
   xSemaphoreGive(semaphore_serial2);
   reinit_mk312_easy();  
+}
+
+
+void mk312_inc_a()
+{
+  int a = mk312_get_a();
+  if (a < 99 )
+  {
+    a++;
+    mk312_set_a(a);  
+  }
+}
+
+void mk312_inc_b()
+{
+  int b = mk312_get_b();
+  if (b < 99 )
+  {
+    b++;
+    mk312_set_b(b);  
+  }
+}
+
+void mk312_inc_ma()
+{
+  int ma = mk312_get_ma();
+  if (ma < 99 )
+  {
+    ma++;
+    mk312_set_ma(ma);  
+  }
+}
+
+void mk312_dec_a()
+{
+  int a = mk312_get_a();
+  if (a > 0 )
+  {
+    a--;
+    mk312_set_a(a);  
+  }
+}
+
+void mk312_dec_b()
+{
+  int b = mk312_get_a();
+  if (b > 0 )
+  {
+    b--;
+    mk312_set_b(b);  
+  }
+}
+
+void mk312_dec_ma()
+{
+  int ma = mk312_get_ma();
+  if (ma > 0 )
+  {
+    ma--;
+    mk312_set_ma(ma);  
+  }
 }

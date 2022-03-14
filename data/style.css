@@ -71,3 +71,6 @@ html {
     padding-left: 5%;
     padding-right: 5%;
   }
+  .button {
+	height: 30px;
+  }

@@ -67,6 +67,7 @@ void init_preferences()
     preferences.end();
     Serial.println("preferences loaded");
   }
+
   Serial.println("ssid: " + ssid);
   Serial.println("hostname: " + hostname);
 }
@@ -151,7 +152,7 @@ void handleWebSocketMessage_ws(void *arg, uint8_t *data, size_t len)
 
     switch (message[0])
     {
-      case 'r':
+      case 'r': //ramp
         switch (message[5])
         {
           case 'l':
@@ -168,6 +169,12 @@ void handleWebSocketMessage_ws(void *arg, uint8_t *data, size_t len)
             break;
         }
         break;
+
+      case 'e': //emergency stop
+         mk312_all_off();
+         values["slider_a"] = mk312_get_a();
+         values["slider_b"] = mk312_get_b();
+         break;
 
       case 's': //slider
         slider = atoi(message + 9);
@@ -218,8 +225,50 @@ void handleWebSocketMessage_ws(void *arg, uint8_t *data, size_t len)
         break;
 
       case 'b'://bytes
-
+        
         break;
+
+      case 'i'://inc
+        switch (message[4])
+        {
+          case 'a':
+            mk312_inc_a();
+            values["slider_a"] = mk312_get_a();
+            break;
+
+          case 'b':
+            mk312_inc_b();
+            values["slider_b"] = mk312_get_b();
+            break;
+
+          case 'm':
+            mk312_inc_ma();
+            values["slider_m"] = mk312_get_ma();
+            break;
+        }
+        break;
+
+      case 'd'://dec
+        switch (message[4])
+        {
+          case 'a':
+            mk312_dec_a();
+            values["slider_a"] = mk312_get_a();
+            break;
+
+          case 'b':
+            mk312_dec_b();
+            values["slider_b"] = mk312_get_b();
+            break;
+
+          case 'm':
+            mk312_dec_ma();
+            values["slider_m"] = mk312_get_ma();
+            break;
+        }
+        break;
+
+
 
     }
 

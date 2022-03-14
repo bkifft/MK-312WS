@@ -87,8 +87,14 @@
 #define BUTTON_LEFT 0x10
 
 
-void init_mk312();
+//deprecated void init_mk312();
 void mk312_sync();
+void mk312_inc_a();
+void mk312_inc_b();
+void mk312_inc_ma();
+void mk312_dec_a();
+void mk312_dec_b();
+void mk312_dec_ma();
 void mk312_set_a(int percent);
 void mk312_set_b(int percent);
 void mk312_set_ma(int percent);
@@ -99,6 +105,8 @@ int mk312_get_b();
 int mk312_get_ma();
 byte mk312_get_mode();
 
+void mk312_all_off();
+
 void mk312_enable_adc();
 void mk312_disable_adc();
 bool mk312_get_adc_disabled();
@@ -107,6 +115,6 @@ byte mk312_get_ramp_time();
 void mk312_ramp_start();
 int mk312_get_battery_level();
 void init_mk312_easy();
-void mk312_bruteforce_ramp();
+//void mk312_bruteforce_ramp();
 
 #endif //MK312_H
