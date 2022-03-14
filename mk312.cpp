@@ -483,7 +483,7 @@ void mk312_dec_a()
 
 void mk312_dec_b()
 {
-  int b = mk312_get_a();
+  int b = mk312_get_b();
   if (b > 0 )
   {
     b--;
