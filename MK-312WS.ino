@@ -403,9 +403,9 @@ for(int i=0;i<args;i++){
     Serial.println("new hostname: " + hostname);
 
     preferences.begin(preferences_namespace.c_str());
-    preferences.putString("ssid", ssid);
-    preferences.putString("password", password);
-    preferences.putString("hostname", hostname);
+    if (ssid.length() > 0 ) preferences.putString("ssid", ssid);
+    if (password.length() > 0 ) preferences.putString("password", password);
+    if (hostname.length() > 0 ) preferences.putString("hostname", hostname);
     preferences.putBool("bt_mode", bt_mode);
 
     preferences.end();
