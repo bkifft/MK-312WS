@@ -8,7 +8,8 @@ BC          ?= bc
 
 PARTITION_TABLE=~/.arduino15/packages/esp32/hardware/esp32/1.0.6/tools/partitions/default.csv
 
-DEVICE :=/dev/ttyUSB0
+DEVICE :=/dev/ttyACM0
+#DEVICE :=/dev/ttyUSB0
 
 .PHONY: factory
 factory: | erase_flash flash-fs flash

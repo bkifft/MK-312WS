@@ -273,7 +273,7 @@ void mk312_set_ma(int percent)
   ma_max = mk312_read(ADDRESS_MA_MAX_VALUE);
   ma_min = mk312_read(ADDRESS_MA_MIN_VALUE);
   value = map(percent, 0, 100, ma_max, ma_min);
-  Serial.printf("set_ma: max %02x min %02x val %02x", ma_max, ma_min, value);
+  Serial.printf("set_ma: max %02x min %02x val %02x\r\n", ma_max, ma_min, value);
   mk312_write(ADDRESS_LEVELMA, &value, 1);
 
 }
@@ -464,10 +464,16 @@ void mk312_inc_b()
 void mk312_inc_ma()
 {
   int ma = mk312_get_ma();
+  Serial.print("ma inc: ");
+Serial.println(ma);
+
   if (ma < 99 )
   {
     ma++;
     mk312_set_ma(ma);  
+    Serial.print("ma inced: ");
+Serial.println(ma);
+
   }
 }
 
@@ -494,6 +500,9 @@ void mk312_dec_b()
 void mk312_dec_ma()
 {
   int ma = mk312_get_ma();
+    Serial.print("ma dec: ");
+Serial.println(ma);
+
   if (ma > 0 )
   {
     ma--;

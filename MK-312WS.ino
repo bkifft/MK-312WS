@@ -16,6 +16,7 @@
 const String default_hostname = "MK-312WS";
 const String default_ssid = WiFi.macAddress();
 const String default_password = "12345678"; //needs to be at least 8 chars long for AP mode
+const bool default_bt_mode = false;
 const int retry_limit = 10;
 
 /////////sgtop changing
@@ -25,6 +26,8 @@ const char* hex_table = "0123456789abcdef";
 AsyncWebServer server(80);
 AsyncWebSocket ws("/ws");
 AsyncWebSocket ws_bytes("/ws_bytes");
+
+bool bt_mode;
 
 Preferences preferences;
 String ssid;
@@ -58,12 +61,15 @@ void init_preferences()
     ssid = default_ssid;
     password = default_password;
     hostname = default_hostname;
+    bt_mode = default_bt_mode;
   }
   else
   {
     ssid = preferences.getString("ssid", default_ssid);
     password = preferences.getString("password", default_password);
     hostname = default_hostname;//fixme preferences.getString("hostname", default_hostname);
+    bt_mode = preferences.getBool("bt_mode", default_bt_mode);
+
     preferences.end();
     Serial.println("preferences loaded");
   }
@@ -323,15 +329,6 @@ void init_ws()
 
 
 void setup() {
-  Serial.begin(115200);
-  pinMode(0, OUTPUT);
-  pinMode(2, OUTPUT);
-  init_fs();
-  init_preferences();
-  init_wifi();
-  init_ws();
-  init_mk312_easy();
-
   values["slider_a"] = 0;
   values["slider_b"] = 0;
   values["slider_m"] = 0;
@@ -340,14 +337,34 @@ void setup() {
   values["battery"] = 0;
   //values["ramp_level"] = 5;
   //values["ramp_time"] = 5;
-
   json_string = JSON.stringify(values);
+
+  Serial.begin(115200);
+  pinMode(0, OUTPUT);
+  pinMode(2, OUTPUT);
+  init_fs();
+  init_preferences();
+  init_wifi();
+
+if (bt_mode)
+{
+  init_bt();
+   server.on("/", HTTP_GET, [](AsyncWebServerRequest * request)
+  {
+    request->send(SPIFFS, "/btmode.html", "text/html", false, template_processor);
+  });
+}
+else
+{
+  init_mk312_easy();
+  init_ws();
+
 
   server.on("/", HTTP_GET, [](AsyncWebServerRequest * request)
   {
     request->send(SPIFFS, "/index.html", "text/html", false, template_processor);
   });
-
+}
   server.on("/config", HTTP_GET, [](AsyncWebServerRequest * request)
   {
     request->send(SPIFFS, "/config.html", "text/html");
