@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include "BluetoothSerial.h"
 #include <WiFi.h>
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
@@ -27,6 +28,7 @@ AsyncWebServer server(80);
 AsyncWebSocket ws("/ws");
 AsyncWebSocket ws_bytes("/ws_bytes");
 
+BluetoothSerial SerialBT;
 bool bt_mode;
 
 Preferences preferences;
@@ -37,6 +39,12 @@ String preferences_namespace;
 
 JSONVar values;
 String json_string;
+
+void init_bt()
+{
+  Serial2.begin(19200);  
+ SerialBT.begin("MK312");
+}
 
 void init_fs()
 {
@@ -67,16 +75,19 @@ void init_preferences()
   {
     ssid = preferences.getString("ssid", default_ssid);
     password = preferences.getString("password", default_password);
-    hostname = default_hostname;//fixme preferences.getString("hostname", default_hostname);
+    hostname = preferences.getString("hostname", default_hostname);
     bt_mode = preferences.getBool("bt_mode", default_bt_mode);
 
     preferences.end();
     Serial.println("preferences loaded");
   }
 
-  Serial.println("ssid: " + ssid);
-  Serial.println("hostname: " + hostname);
+  Serial.print("ssid: ");Serial.println( ssid);
+  Serial.print("hostname: ");Serial.println( hostname);
+    Serial.print("bt_mode: ");Serial.println( bt_mode);
+
 }
+
 
 String template_processor(const String& var)
 {
@@ -92,7 +103,7 @@ void init_wifi()
   int count = 0;
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid.c_str(), password.c_str());
-  Serial.println("Connecting to WiFi ");
+//  Serial.println("Connecting to WiFi ");
   while (++count < retry_limit && WiFi.status() != WL_CONNECTED)
   {
     Serial.print('.');
@@ -375,7 +386,19 @@ else
     if (request->hasParam("ssid", true)) ssid = request->getParam("ssid", true)->value();
     if (request->hasParam("password", true)) password = request->getParam("password", true)->value();
     if (request->hasParam("hostname", true)) hostname = request->getParam("hostname", true)->value();
-
+    if (request->hasParam("bt_mode", true)) //only triggers if checked
+    {
+      bt_mode = true;
+    }
+    else
+    {
+      bt_mode = false;
+    }
+/*int args = request->args();
+for(int i=0;i<args;i++){
+  Serial.printf("ARG[%s]: %s\n", request->argName(i).c_str(), request->arg(i).c_str());
+  
+}*/
     Serial.println("new ssid: " + ssid);
     Serial.println("new hostname: " + hostname);
 
@@ -383,6 +406,8 @@ else
     preferences.putString("ssid", ssid);
     preferences.putString("password", password);
     preferences.putString("hostname", hostname);
+    preferences.putBool("bt_mode", bt_mode);
+
     preferences.end();
     request->send(200, "text/plain", "CONFIG UPDATED");
   });
@@ -396,7 +421,7 @@ else
   });
 
   server.serveStatic("/", SPIFFS, "/");
-  AsyncElegantOTA.begin(&server, ssid.c_str(), password.c_str());
+  AsyncElegantOTA.begin(&server);//, ssid.c_str(), password.c_str());//FIXME: reenable update login
   server.begin();
   digitalWrite(0, HIGH);
   digitalWrite(2, HIGH);
@@ -404,5 +429,20 @@ else
 
 
 void loop() {
-  ws.cleanupClients();
+  if (bt_mode)
+  //no locking required, bt mode is 1:1 for now
+  {
+    if (Serial2.available()) {
+      SerialBT.write(Serial2.read());
+    }
+    if (SerialBT.available()) {
+      Serial2.write(SerialBT.read());
+    }
+  }
+  else
+  {
+
+      ws.cleanupClients();
+
+  }
 }

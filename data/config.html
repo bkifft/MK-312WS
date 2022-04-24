@@ -8,14 +8,17 @@
 </head>
 <body>
 <form action='/config_post' method = 'post'>
-  <label>hostname</label>
+  <label for="hoatname">hostname</label>
   <input type = 'text' name = 'hostname'/>
   <br/>
-  <label>ssid</label>
+  <label for="ssid">ssid</label>
   <input type = 'text' name = 'ssid'/>
   <br/>
-  <label>password</label>
+  <label for="password">password</label>
   <input type = 'text' name = 'password'/>
+  <br/>
+  <label for="bt_mode">BT mode</label>
+  <input type="checkbox" id="bt_mode" name="bt_mode">
   <br/>
   <input type='submit' value='submit'>
   </form>

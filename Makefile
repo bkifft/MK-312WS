@@ -1,12 +1,12 @@
 sketch      := MK-312WS.ino
 CORE        := esp32:esp32
-boardconfig := "${CORE}:d1_mini32:FlashFreq=80,PartitionScheme=default,CPUFreq=240,UploadSpeed=460800"
+boardconfig := "${CORE}:d1_mini32:FlashFreq=80,PartitionScheme=min_spiffs,CPUFreq=240,UploadSpeed=460800"
 
 ARDUINO_CLI ?= arduino-cli
 MKSPIFFS    ?= mkspiffs
 BC          ?= bc
 
-PARTITION_TABLE=~/.arduino15/packages/esp32/hardware/esp32/1.0.6/tools/partitions/default.csv
+PARTITION_TABLE=~/.arduino15/packages/esp32/hardware/esp32/1.0.6/tools/partitions/min_spiffs.csv
 
 DEVICE :=/dev/ttyACM0
 #DEVICE :=/dev/ttyUSB0
