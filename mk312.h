@@ -112,6 +112,8 @@ void mk312_disable_adc();
 bool mk312_get_adc_disabled();
 byte mk312_get_ramp_level();
 byte mk312_get_ramp_time();
+void mk312_set_ramp_level();
+void mk312_set_ramp_time();
 void mk312_ramp_start();
 int mk312_get_battery_level();
 void init_mk312_easy();

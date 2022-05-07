@@ -301,7 +301,16 @@ byte mk312_get_ramp_level()
 byte mk312_get_ramp_time()
 {
   return mk312_read(ADDRESS_RAMP_TIME);
+}
 
+void mk312_set_ramp_level()
+{
+  
+}
+
+void mk312_set_ramp_time()
+{
+  
 }
 
 void mk312_ramp_start()

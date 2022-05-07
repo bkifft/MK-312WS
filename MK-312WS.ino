@@ -42,7 +42,7 @@ String json_string;
 
 void init_bt()
 {
-  Serial2.begin(19200);  
+ Serial2.begin(19200);  
  SerialBT.begin("MK312");
 }
 
@@ -429,20 +429,27 @@ for(int i=0;i<args;i++){
 
 
 void loop() {
+  char c;
   if (bt_mode)
   //no locking required, bt mode is 1:1 for now
   {
     if (Serial2.available()) {
-      SerialBT.write(Serial2.read());
+      c = Serial2.read();
+      SerialBT.write(c);
+      Serial.print("in  ");
+      Serial.println(c, HEX);
+      
     }
     if (SerialBT.available()) {
-      Serial2.write(SerialBT.read());
+      c = SerialBT.read();
+      Serial2.write(c);
+      Serial.print("out ");
+      Serial.println(c, HEX);
+      
     }
   }
   else
   {
-
       ws.cleanupClients();
-
   }
 }
