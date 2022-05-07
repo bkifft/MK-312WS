@@ -1,0 +1,3 @@
+(sym_lib_table
+  (lib (name "mk312ws-rescue")(type "Legacy")(uri "${KIPRJMOD}/mk312ws-rescue.lib")(options "")(descr ""))
+)
