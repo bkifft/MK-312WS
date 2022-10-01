@@ -19,8 +19,8 @@ const String default_ssid = WiFi.macAddress();
 const String default_password = "12345678"; //needs to be at least 8 chars long for AP mode
 const bool default_bt_mode = false;
 const int retry_limit = 10;
-
-/////////sgtop changing
+const String fw_version = "0.4";
+/////////stop changing
 
 const char* hex_table = "0123456789abcdef";
 
@@ -95,6 +95,11 @@ String template_processor(const String& var)
   {
     return hostname;
   }
+  if (var == "FWVERSION")
+  {
+    return fw_version;
+  }
+  
   return String();
 }
 
@@ -141,7 +146,7 @@ void update_knobs()
   values["slider_m"] = mk312_get_ma();
 
 }
-
+/*
 void handleWebSocketMessage_ws_bytes(void *arg, uint8_t *data, size_t len)
 {
   AwsFrameInfo *info = (AwsFrameInfo*)arg;
@@ -152,6 +157,7 @@ void handleWebSocketMessage_ws_bytes(void *arg, uint8_t *data, size_t len)
   }
 
 }
+*/
 void handleWebSocketMessage_ws(void *arg, uint8_t *data, size_t len)
 {
   AwsFrameInfo *info = (AwsFrameInfo*)arg;
@@ -312,7 +318,8 @@ void onEvent_ws(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTy
       break;
   }
 }
-void onEvent_ws_bytes(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len) {
+
+/*void onEvent_ws_bytes(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len) {
   switch (type)
   {
     case WS_EVT_CONNECT:
@@ -329,13 +336,14 @@ void onEvent_ws_bytes(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsE
       break;
   }
 }
+*/
 
 void init_ws()
 {
   ws.onEvent(onEvent_ws);
   server.addHandler(&ws);
-  ws_bytes.onEvent(onEvent_ws_bytes);
-  server.addHandler(&ws_bytes);
+ // ws_bytes.onEvent(onEvent_ws_bytes);
+ // server.addHandler(&ws_bytes);
 }
 
 
@@ -367,6 +375,7 @@ if (bt_mode)
 }
 else
 {
+  delay(1000);
   init_mk312_easy();
   init_ws();
 
@@ -378,7 +387,7 @@ else
 }
   server.on("/config", HTTP_GET, [](AsyncWebServerRequest * request)
   {
-    request->send(SPIFFS, "/config.html", "text/html");
+    request->send(SPIFFS, "/config.html", "text/html", false, template_processor);
   });
 
   server.on("/config_post", HTTP_POST, [](AsyncWebServerRequest * request)
@@ -436,15 +445,15 @@ void loop() {
     if (Serial2.available()) {
       c = Serial2.read();
       SerialBT.write(c);
-      Serial.print("in  ");
-      Serial.println(c, HEX);
+     // Serial.print("in  ");
+     // Serial.println(c, HEX);
       
     }
     if (SerialBT.available()) {
       c = SerialBT.read();
       Serial2.write(c);
-      Serial.print("out ");
-      Serial.println(c, HEX);
+    //  Serial.print("out ");
+     // Serial.println(c, HEX);
       
     }
   }

@@ -363,7 +363,7 @@ void reinit_mk312_easy()
 {
   int i = 0;
   byte buffer[16];
-  int retry_count = 11;
+  const int retry_count = 11;
   Serial2.setTimeout(timeout);
 
   if (xSemaphoreTake(semaphore_serial2, portMAX_DELAY) == pdTRUE)
