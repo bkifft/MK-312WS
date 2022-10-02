@@ -11,3 +11,10 @@ Windows:
 - In first line tick checkbox, open USB-flash.bin, enter 0x0 (that's zeroxzero) into last field.
 - Select virtual com port in bottom right
 - Click Start
+
+esptool.py:
+- Install esptool.py. Available via apt, pip, homebrew and otheer package managers.
+- Connect board using microUSB cable
+- run 
+esptool.py --chip esp32 --port /dev/ttyUSB0 --baud 460800  --before default_reset --after hard_reset write_flash -z --flash_mode dio --flash_freq 80m --flash_size detect 0x0 USB-flash.bin 
+
